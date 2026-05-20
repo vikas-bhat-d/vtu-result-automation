@@ -33,3 +33,73 @@
 {"t":"2026-05-20T03:31:47.479Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
 {"t":"2026-05-20T03:31:58.693Z","level":"info","msg":"Generating Excel for 2 students"}
 {"t":"2026-05-20T03:31:58.788Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T03-31-58.xlsx"}
+{"t":"2026-05-20T14:28:26.577Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T14:32:30.223Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T14:32:51.077Z","level":"info","msg":"Cache cleared (all)"}
+{"t":"2026-05-20T14:33:02.725Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T14:33:14.180Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"D25J26Ecbcs"}}
+{"t":"2026-05-20T14:33:14.182Z","level":"info","msg":"Preparing captcha for 4SU22IS062"}
+{"t":"2026-05-20T14:33:15.030Z","level":"debug","msg":"Captcha ready for 4SU22IS062"}
+{"t":"2026-05-20T14:33:26.145Z","level":"info","msg":"Submitting captcha for 4SU22IS062"}
+{"t":"2026-05-20T14:33:26.494Z","level":"debug","msg":"Cached: 4SU22IS062 [D25J26Ecbcs]"}
+{"t":"2026-05-20T14:33:26.495Z","level":"info","msg":"Result: 4SU22IS062 → VIKAS BHAT D (6 subjects)"}
+{"t":"2026-05-20T14:33:26.496Z","level":"info","msg":"Preparing captcha for 4SU22IS048"}
+{"t":"2026-05-20T14:33:27.069Z","level":"debug","msg":"Captcha ready for 4SU22IS048"}
+{"t":"2026-05-20T14:33:40.581Z","level":"info","msg":"Submitting captcha for 4SU22IS048"}
+{"t":"2026-05-20T14:33:40.893Z","level":"debug","msg":"Cached: 4SU22IS048 [D25J26Ecbcs]"}
+{"t":"2026-05-20T14:33:40.895Z","level":"info","msg":"Result: 4SU22IS048 → SOURABH H K (6 subjects)"}
+{"t":"2026-05-20T14:33:40.896Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T14:33:49.235Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T14:33:49.347Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T14-33-49.xlsx"}
+{"t":"2026-05-20T14:43:13.053Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T14:44:42.854Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T14:44:57.689Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T14:45:05.223Z","level":"info","msg":"Session started: 1 USNs","data":{"examPath":"D25J26Ecbcs"}}
+{"t":"2026-05-20T14:45:05.227Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T14:45:05.229Z","level":"info","msg":"Session complete","data":{"results":1,"skipped":0,"errors":0}}
+{"t":"2026-05-20T14:45:09.083Z","level":"info","msg":"Generating Excel for 1 students"}
+{"t":"2026-05-20T14:45:09.213Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T14-45-09.xlsx"}
+{"t":"2026-05-20T14:49:19.929Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T14:49:33.327Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T14:49:33.331Z","level":"info","msg":"Preparing captcha for 4SU22IS062"}
+{"t":"2026-05-20T14:49:34.397Z","level":"debug","msg":"Captcha ready for 4SU22IS062"}
+{"t":"2026-05-20T14:49:40.159Z","level":"info","msg":"Submitting captcha for 4SU22IS062"}
+{"t":"2026-05-20T14:49:40.581Z","level":"debug","msg":"Cached: 4SU22IS062 [JJEcbcs25]"}
+{"t":"2026-05-20T14:49:40.583Z","level":"info","msg":"Result: 4SU22IS062 → VIKAS BHAT D (9 subjects)"}
+{"t":"2026-05-20T14:49:40.584Z","level":"info","msg":"Preparing captcha for 4SU22IS044"}
+{"t":"2026-05-20T14:49:41.427Z","level":"debug","msg":"Captcha ready for 4SU22IS044"}
+{"t":"2026-05-20T14:49:47.731Z","level":"info","msg":"Submitting captcha for 4SU22IS044"}
+{"t":"2026-05-20T14:49:48.621Z","level":"debug","msg":"Cached: 4SU22IS044 [JJEcbcs25]"}
+{"t":"2026-05-20T14:49:48.624Z","level":"info","msg":"Result: 4SU22IS044 → SHREYA M N (12 subjects)"}
+{"t":"2026-05-20T14:49:48.627Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T14:49:51.996Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T14:49:52.137Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T14-49-52.xlsx"}
+{"t":"2026-05-20T14:57:17.645Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:23:48.499Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:25:02.106Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:25:13.462Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T15:25:30.797Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T15:25:30.799Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T15:25:30.800Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T15:25:30.801Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T15:25:33.043Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T15:25:33.076Z","level":"error","msg":"Excel generation failed","data":"ENOENT: no such file or directory, open 'C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T15-25-33.xlsx'"}
+{"t":"2026-05-20T15:25:45.464Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T15:25:45.489Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T15-25-45.xlsx"}
+{"t":"2026-05-20T15:29:18.917Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:30:07.894Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T15:30:23.699Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T15:30:23.701Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T15:30:23.702Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T15:30:23.703Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T15:30:26.000Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T15:30:26.115Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T15-30-26.xlsx"}
+{"t":"2026-05-20T15:35:46.945Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:36:39.993Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T15:36:58.826Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:37:01.893Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T15:37:01.895Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T15:37:01.896Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T15:37:01.896Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T15:37:04.433Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T15:37:04.537Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T15-37-04.xlsx"}

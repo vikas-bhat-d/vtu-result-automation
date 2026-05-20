@@ -64,8 +64,14 @@ function getCacheTtlMs() {
   return (readConfig().cacheTtlHours || 24) * 60 * 60 * 1000;
 }
 
-function cacheGet(usn) {
-  const fp = path.join(CACHE_DIR, `${usn.toUpperCase()}.json`);
+// Cache filename: USN_EXAMCODE.json so results from different exams don't collide
+function cacheKey(usn, examPath) {
+  const safeExam = (examPath || 'default').replace(/[^a-zA-Z0-9]/g, '');
+  return `${usn.toUpperCase()}_${safeExam}`;
+}
+
+function cacheGet(usn, examPath) {
+  const fp = path.join(CACHE_DIR, `${cacheKey(usn, examPath)}.json`);
   if (!fs.existsSync(fp)) return null;
   try {
     const cached = JSON.parse(fs.readFileSync(fp, 'utf8'));
@@ -77,15 +83,18 @@ function cacheGet(usn) {
   return null;
 }
 
-function cacheSet(usn, data) {
-  const fp = path.join(CACHE_DIR, `${usn.toUpperCase()}.json`);
+function cacheSet(usn, examPath, data) {
+  const fp = path.join(CACHE_DIR, `${cacheKey(usn, examPath)}.json`);
   fs.writeFileSync(fp, JSON.stringify({ fetchedAt: new Date().toISOString(), data }, null, 2), 'utf8');
-  log('debug', `Cached: ${usn}`);
+  log('debug', `Cached: ${usn} [${examPath}]`);
 }
 
 function cacheClearOne(usn) {
-  const fp = path.join(CACHE_DIR, `${usn.toUpperCase()}.json`);
-  if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  // clear any exam variant for this USN
+  const prefix = `${usn.toUpperCase()}_`;
+  fs.readdirSync(CACHE_DIR)
+    .filter(f => f.endsWith('.json') && f.toUpperCase().startsWith(prefix))
+    .forEach(f => fs.unlinkSync(path.join(CACHE_DIR, f)));
 }
 
 function cacheClearAll() {
@@ -99,16 +108,19 @@ function cacheStatus() {
   return fs.readdirSync(CACHE_DIR)
     .filter(f => f.endsWith('.json'))
     .map(f => {
-      const usn = f.replace('.json', '');
+      const basename = f.replace('.json', '');
+      const idx      = basename.indexOf('_');
+      const usn      = idx > 0 ? basename.slice(0, idx) : basename;
+      const examCode = idx > 0 ? basename.slice(idx + 1) : '';
       const fp  = path.join(CACHE_DIR, f);
       try {
         const c       = JSON.parse(fs.readFileSync(fp, 'utf8'));
         const age     = Date.now() - new Date(c.fetchedAt).getTime();
         const expired = age >= ttl;
         const expiresInMin = expired ? 0 : Math.round((ttl - age) / 60000);
-        return { usn, fetchedAt: c.fetchedAt, expired, expiresInMin };
+        return { usn, examCode, fetchedAt: c.fetchedAt, expired, expiresInMin };
       } catch {
-        return { usn, corrupt: true };
+        return { usn, examCode, corrupt: true };
       }
     })
     .sort((a, b) => a.usn.localeCompare(b.usn));
@@ -289,7 +301,7 @@ async function prepareCaptcha(usn) {
 async function advanceSession() {
   while (session.currentIdx < session.usns.length) {
     const usn    = session.usns[session.currentIdx];
-    const cached = cacheGet(usn);
+    const cached = cacheGet(usn, session.examPath);
     if (cached) {
       log('info', `Cache hit: ${usn} — ${cached.name}`);
       session.results[usn.toUpperCase()] = cached;
@@ -454,6 +466,8 @@ app.post('/api/captcha/submit', async (req, res) => {
     const ts      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const rawPath = path.join(OUT_DIR, `${usn}_${ts}_raw.html`);
     fs.writeFileSync(rawPath, html, 'utf8');
+    // Save raw JSON after successful parse (written later, path captured now)
+    const rawJsonPath = path.join(OUT_DIR, `${usn}_${ts}_raw.json`);
 
     // Wrong captcha
     if (/invalid\s*captcha|wrong\s*captcha/i.test(html)) {
@@ -502,8 +516,9 @@ app.post('/api/captcha/submit', async (req, res) => {
       });
     }
 
-    cacheSet(usn, parsed);
+    cacheSet(usn, session.examPath, parsed);
     session.results[usn.toUpperCase()] = parsed;
+    fs.writeFileSync(rawJsonPath, JSON.stringify(parsed, null, 2), 'utf8');
 
     log('info', `Result: ${usn} → ${parsed.name} (${parsed.subjects.length} subjects)`);
 
@@ -541,6 +556,32 @@ function colL(n) {
     n = Math.floor((n - 1) / 26);
   }
   return s;
+}
+
+// ── Grade helpers (used when VTU result overrides formula) ───────────────────
+function gradePointFromTotal(total, isProject) {
+  if (typeof total !== 'number' || isNaN(total)) return 0;
+  if (isProject) {
+    if (total >= 180) return 10;
+    if (total >= 160) return 9;
+    if (total >= 140) return 8;
+    if (total >= 120) return 7;
+    if (total >= 110) return 6;
+    if (total >= 100) return 5;
+    if (total >= 80)  return 4;
+    return 0;
+  }
+  if (total >= 90) return 10;
+  if (total >= 80) return 9;
+  if (total >= 70) return 8;
+  if (total >= 60) return 7;
+  if (total >= 55) return 6;
+  if (total >= 50) return 5;
+  if (total >= 40) return 4;
+  return 0;
+}
+function gradeFromPoint(gp) {
+  return ({10:'O',9:'A+',8:'A',7:'B+',6:'B',5:'C',4:'P',0:'F'})[gp] ?? 'F';
 }
 
 // ── Generate Excel from scratch ────────────────────────────────────────────────
@@ -628,7 +669,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
   for (let i = 0; i < N; i++) {
     ws.mergeCells(3, CIE_COL(i), 3, GRD_COL(i));
     const cell = ws.getCell(3, CIE_COL(i));
-    cell.value = subjects[i].code;
+    cell.value = Array.isArray(subjects[i].code) ? subjects[i].code.join('/') : subjects[i].code;
     styleCell(cell, { fill: fillPink, bold: true });
   }
   ws.mergeCells(3, SGPA_COL, 3, RES_COL);
@@ -684,7 +725,10 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
 
   // Data rows
   const usnList = Object.keys(resultsMap);
-  const isProject = subjects.map(s => /project|dissertation/i.test(s.name) || /project|dissertation/i.test(s.code));
+  const isProject = subjects.map(s => {
+    const codes = Array.isArray(s.code) ? s.code : String(s.code).split(',').map(c => c.trim());
+    return /project|dissertation/i.test(s.name) || codes.some(c => /project|dissertation/i.test(c));
+  });
 
   for (let idx = 0; idx < usnList.length; idx++) {
     const usn     = usnList[idx];
@@ -708,7 +752,10 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
       const totLetter = colL(TOT_COL(i));
       const grpLetter = colL(GRP_COL(i));
       const grdLetter = colL(GRD_COL(i));
-      const subjData  = student && student.subjects ? student.subjects.find(s => s.code === subjects[i].code) : null;
+      const cfgCodes  = Array.isArray(subjects[i].code)
+        ? subjects[i].code
+        : String(subjects[i].code).split(',').map(c => c.trim()).filter(Boolean);
+      const subjData  = student && student.subjects ? student.subjects.find(s => cfgCodes.includes(s.code)) : null;
       const fillUsed  = isProject[i] ? fillOrange : fillYellow;
 
       const cieCell = ws.getCell(r, CIE_COL(i));
@@ -724,16 +771,28 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
 
       const grpCell = ws.getCell(r, GRP_COL(i));
       const grpFmla = isProject[i]
-        ? `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<40,${seeLetter}${r}<35,${totLetter}${r}<80),0,IF(${totLetter}${r}>=180,10,IF(${totLetter}${r}>=160,9,IF(${totLetter}${r}>=140,8,IF(${totLetter}${r}>=120,7,IF(${totLetter}${r}>=110,6,IF(${totLetter}${r}>=100,5,IF(${totLetter}${r}>=80,4,0))))))))))` 
-        : `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<20,${seeLetter}${r}<18,${totLetter}${r}<40),0,IF(${totLetter}${r}>=90,10,IF(${totLetter}${r}>=80,9,IF(${totLetter}${r}>=70,8,IF(${totLetter}${r}>=60,7,IF(${totLetter}${r}>=55,6,IF(${totLetter}${r}>=50,5,IF(${totLetter}${r}>=40,4,0))))))))))`;
-      grpCell.value = { formula: grpFmla };
-      styleCell(grpCell, { fill: fillUsed, valign: 'bottom' });
+        ? `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<40,${seeLetter}${r}<35,${totLetter}${r}<80),0,IF(${totLetter}${r}>=180,10,IF(${totLetter}${r}>=160,9,IF(${totLetter}${r}>=140,8,IF(${totLetter}${r}>=120,7,IF(${totLetter}${r}>=110,6,IF(${totLetter}${r}>=100,5,IF(${totLetter}${r}>=80,4,0)))))))))` 
+        : `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<20,${seeLetter}${r}<18,${totLetter}${r}<40),0,IF(${totLetter}${r}>=90,10,IF(${totLetter}${r}>=80,9,IF(${totLetter}${r}>=70,8,IF(${totLetter}${r}>=60,7,IF(${totLetter}${r}>=55,6,IF(${totLetter}${r}>=50,5,IF(${totLetter}${r}>=40,4,0)))))))))`;
 
       const grdCell = ws.getCell(r, GRD_COL(i));
       const grdFmla = isProject[i]
         ? `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<40,${seeLetter}${r}<35,${totLetter}${r}<80),"F",IF(${totLetter}${r}>=180,"O",IF(${totLetter}${r}>=160,"A+",IF(${totLetter}${r}>=140,"A",IF(${totLetter}${r}>=120,"B+",IF(${totLetter}${r}>=110,"B",IF(${totLetter}${r}>=100,"C","P"))))))))))` 
-        : `IF(ISBLANK(${cieLetter}${r}),"",IF(${cieLetter}${r}<20,"NE",IF(OR(${seeLetter}${r}<18,${totLetter}${r}<40),"F",IF(${totLetter}${r}>=90,"O",IF(${totLetter}${r}>=80,"A+",IF(${totLetter}${r}>=70,"A",IF(${totLetter}${r}>=60,"B+",IF(${totLetter}${r}>=55,"B",IF(${totLetter}${r}>=50,"C",IF(${totLetter}${r}>=40,"P","F")))))))))))`;
-      grdCell.value = { formula: grdFmla };
+        : `IF(ISBLANK(${cieLetter}${r}),"",IF(${cieLetter}${r}<20,"NE",IF(OR(${seeLetter}${r}<18,${totLetter}${r}<40),"F",IF(${totLetter}${r}>=90,"O",IF(${totLetter}${r}>=80,"A+",IF(${totLetter}${r}>=70,"A",IF(${totLetter}${r}>=60,"B+",IF(${totLetter}${r}>=55,"B",IF(${totLetter}${r}>=50,"C",IF(${totLetter}${r}>=40,"P","F"))))))))))`;
+      // If VTU explicitly reports this subject as passed, use static computed values
+      // (ignores SEE minimum — handles subjects with no external exam, e.g. NSS, Project)
+      const vtuPass = subjData && /^P$/i.test(String(subjData.result ?? '').trim());
+      if (vtuPass) {
+        const tot = typeof subjData.total === 'number' && !isNaN(subjData.total)
+          ? subjData.total
+          : (typeof subjData.internal === 'number' ? subjData.internal : 0);
+        const gp = gradePointFromTotal(tot, isProject[i]);
+        grpCell.value = gp;
+        grdCell.value = gradeFromPoint(gp);
+      } else {
+        grpCell.value = { formula: grpFmla };
+        grdCell.value = { formula: grdFmla };
+      }
+      styleCell(grpCell, { fill: fillUsed, valign: 'bottom' });
       styleCell(grdCell, { fill: fillUsed, valign: 'bottom' });
     }
 
@@ -749,20 +808,31 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     styleCell(pctCell, { fill: fillYellow });
 
     const gradeCols = subjects.map((_, i) => `${colL(GRD_COL(i))}${r}`);
-    const orParts   = gradeCols.flatMap(g => [`${g}="F"`, `${g}="NE"`]).join(',');
-    const resFmla   = `IF(IF(OR(${orParts}),"Fail","Pass")="Pass",IF(${pctLetter}${r}>=70,"FCD",IF(${pctLetter}${r}>=60,"FC",IF(${pctLetter}${r}>=40,"SC")))  ,"Fail")`;
+    // Universal: OR across all grade cells — works in Excel 2007+
+    const orParts = gradeCols.flatMap(g => [`${g}="F"`, `${g}="NE"`]).join(',');
+    const resFmla = `IF(OR(${orParts}),"Fail",IF(${pctLetter}${r}>=70,"FCD",IF(${pctLetter}${r}>=60,"FC",IF(${pctLetter}${r}>=40,"SC","Fail"))))`;
     const resCell = ws.getCell(r, RES_COL);
     resCell.value = { formula: resFmla };
     styleCell(resCell, { fill: fillYellow });
 
-    const gradeSet = `{${gradeCols.join(',')}}`;
-    const passList = ['O','A+','A','B+','B','C','P'].map(g => `COUNTIF(${gradeSet},"${g}")`).join('+');
+    // Pending count: boolean arithmetic, no COUNTIF array constant needed
+    const pendFmla = subjects.map((_, i) => {
+      const g = colL(GRD_COL(i));
+      return `(${g}${r}="F")+(${g}${r}="NE")`;
+    }).join('+');
     const pendCell = ws.getCell(r, PEND_COL);
-    pendCell.value = { formula: `${N}-(${passList})` };
+    pendCell.value = { formula: pendFmla };
     styleCell(pendCell, { fill: fillPink2 });
 
+    // List of pending: MID+& concatenation — no TEXTJOIN, works in Excel 2007+
+    const pendlParts = subjects.map((_, i) => {
+      const grL     = colL(GRD_COL(i));
+      const codeRef = `${colL(CIE_COL(i))}3`;   // subject code is in row 3
+      return `IF(OR(${grL}${r}="F",${grL}${r}="NE"),", "&${codeRef},"")`;
+    });
+    // Prefix each failing subject with ", " then MID(result,3,1000) strips the leading ", "
     const pendlCell = ws.getCell(r, PENDL_COL);
-    pendlCell.value = '';
+    pendlCell.value = { formula: `MID(${pendlParts.join('&')},3,1000)` };
     styleCell(pendlCell, { fill: fillPink2, halign: 'left', wrap: true });
 
     ws.getCell(r, PASA_COL).border = border;

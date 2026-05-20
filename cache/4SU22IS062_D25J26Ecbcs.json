@@ -1,16 +1,16 @@
 {
-  "fetchedAt": "2026-05-20T03:31:47.473Z",
+  "fetchedAt": "2026-05-20T14:33:26.493Z",
   "data": {
-    "usn": "4SU22IS063",
-    "name": "YASHASWINI",
+    "usn": "4SU22IS062",
+    "name": "VIKAS BHAT D",
     "semester": 7,
     "subjects": [
       {
         "code": "BIS701",
         "name": "BIG DATA ANALYTICS",
-        "internal": 45,
-        "external": 33,
-        "total": 78,
+        "internal": 47,
+        "external": 32,
+        "total": 79,
         "result": "P",
         "date": "2026-02-06"
       },
@@ -18,16 +18,16 @@
         "code": "BCS702",
         "name": "PARALLEL COMPUTING",
         "internal": 47,
-        "external": 36,
-        "total": 83,
+        "external": 26,
+        "total": 73,
         "result": "P",
         "date": "2026-02-06"
       },
       {
         "code": "BIS703",
         "name": "INFORMATION & NETWORK SECURITY",
-        "internal": 40,
-        "external": 32,
+        "internal": 45,
+        "external": 27,
         "total": 72,
         "result": "P",
         "date": "2026-02-06"
@@ -36,26 +36,26 @@
         "code": "BIS786",
         "name": "MAJOR PROJECT PHASE-II",
         "internal": 96,
-        "external": 94,
-        "total": 190,
+        "external": 97,
+        "total": 193,
         "result": "P",
         "date": "2026-02-06"
       },
       {
         "code": "BCS714A",
         "name": "DEEP LEARNING",
-        "internal": 42,
-        "external": 23,
-        "total": 65,
+        "internal": 41,
+        "external": 27,
+        "total": 68,
         "result": "P",
         "date": "2026-02-06"
       },
       {
         "code": "BTE755C",
         "name": "EMBEDDED SYSTEM APPLICATIONS",
-        "internal": 34,
-        "external": 38,
-        "total": 72,
+        "internal": 42,
+        "external": 34,
+        "total": 76,
         "result": "P",
         "date": "2026-02-06"
       }
