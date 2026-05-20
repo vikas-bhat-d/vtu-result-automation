@@ -283,15 +283,34 @@ function sessionProgress() {
   };
 }
 
+// Retry wrapper — retries on network errors and HTTP 5xx, not on logical errors
+async function withRetry(fn, maxAttempts = 3, baseDelay = 1500) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const status = err.response?.status;
+      const retryable = !status || status >= 500;
+      if (!retryable || attempt === maxAttempts) throw err;
+      const delay = baseDelay * attempt;
+      log('warn', `VTU request failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay}ms — ${err.message}`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw lastErr;
+}
+
 async function prepareCaptcha(usn) {
   log('info', `Preparing captcha for ${usn}`);
   const cfg      = readConfig();
   const examPath = session.examPath || cfg.examPath;
   if (!examPath) throw new Error('examPath not set. Configure it in Setup.');
 
-  const client    = createVtuClient(examPath);
-  const token     = await fetchToken(client, examPath);
-  const captchaImg = await fetchCaptchaBase64(client);
+  const client     = createVtuClient(examPath);
+  const token      = await withRetry(() => fetchToken(client, examPath));
+  const captchaImg = await withRetry(() => fetchCaptchaBase64(client));
 
   session.pending = { usn, token, captchaImg, client };
   session.status  = 'captcha-wait';
@@ -460,7 +479,7 @@ app.post('/api/captcha/submit', async (req, res) => {
   log('info', `Submitting captcha for ${usn}`);
 
   try {
-    const html = await submitCaptcha(client, examPath, usn, token, captchaCode.trim());
+    const html = await withRetry(() => submitCaptcha(client, examPath, usn, token, captchaCode.trim()));
 
     // Always save raw HTML for debugging
     const ts      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -585,7 +604,7 @@ function gradeFromPoint(gp) {
 }
 
 // ── Generate Excel from scratch ────────────────────────────────────────────────
-async function generateExcel(resultsMap, subjects, credits, collegeName, batchName, examName, semLabel) {
+async function generateExcel(resultsMap, subjects, credits, collegeName, batchName, examName, semLabel, examPath) {
   const N = subjects.length;
   const CIE_COL  = i => 4 + i * 5;
   const SEE_COL  = i => 5 + i * 5;
@@ -673,7 +692,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     styleCell(cell, { fill: fillPink, bold: true });
   }
   ws.mergeCells(3, SGPA_COL, 3, RES_COL);
-  styleCell(ws.getCell(3, SGPA_COL), { fill: fillPink, bold: true });
+  styleCell(ws.getCell(3, SGPA_COL), { fill: fillPink, bold: true ,valign:'middle'});
   ws.getCell(3, SGPA_COL).value = 'Results';
   ws.mergeCells(3, PEND_COL, 6, PEND_COL);
   ws.mergeCells(3, PENDL_COL, 6, PENDL_COL);
@@ -767,7 +786,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
 
       const totCell = ws.getCell(r, TOT_COL(i));
       totCell.value = { formula: `IF(ISBLANK(${cieLetter}${r}),"",${cieLetter}${r}+${seeLetter}${r})` };
-      styleCell(totCell, { fill: fillUsed });
+      styleCell(totCell, { fill: fillUsed, size: 11 });
 
       const grpCell = ws.getCell(r, GRP_COL(i));
       const grpFmla = isProject[i]
@@ -792,8 +811,8 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
         grpCell.value = { formula: grpFmla };
         grdCell.value = { formula: grdFmla };
       }
-      styleCell(grpCell, { fill: fillUsed, valign: 'bottom' });
-      styleCell(grdCell, { fill: fillUsed, valign: 'bottom' });
+      styleCell(grpCell, { fill: fillUsed, halign: 'center',valign:"middle", size: 11 });
+      styleCell(grdCell, { fill: fillUsed, halign: 'center',valign:"middle", size: 11 });
     }
 
     const sgpaLetter = colL(SGPA_COL);
@@ -801,11 +820,11 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     const sgpaParts  = subjects.map((_, i) => `${credits[i]}*${colL(GRP_COL(i))}${r}`).join(',');
     const sgpaCell   = ws.getCell(r, SGPA_COL);
     sgpaCell.value = { formula: `(SUM(${sgpaParts})/${totalCredits})` };
-    styleCell(sgpaCell, { fill: fillYellow, valign: 'bottom' });
+    styleCell(sgpaCell, { fill: fillYellow, valign: 'middle', size: 11 });
 
     const pctCell = ws.getCell(r, PCT_COL);
     pctCell.value = { formula: `${sgpaLetter}${r}*10` };
-    styleCell(pctCell, { fill: fillYellow });
+    styleCell(pctCell, { fill: fillYellow, size: 11 });
 
     const gradeCols = subjects.map((_, i) => `${colL(GRD_COL(i))}${r}`);
     // Universal: OR across all grade cells — works in Excel 2007+
@@ -813,7 +832,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     const resFmla = `IF(OR(${orParts}),"Fail",IF(${pctLetter}${r}>=70,"FCD",IF(${pctLetter}${r}>=60,"FC",IF(${pctLetter}${r}>=40,"SC","Fail"))))`;
     const resCell = ws.getCell(r, RES_COL);
     resCell.value = { formula: resFmla };
-    styleCell(resCell, { fill: fillYellow });
+    styleCell(resCell, { fill: fillYellow, size: 11 });
 
     // Pending count: boolean arithmetic, no COUNTIF array constant needed
     const pendFmla = subjects.map((_, i) => {
@@ -822,7 +841,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     }).join('+');
     const pendCell = ws.getCell(r, PEND_COL);
     pendCell.value = { formula: pendFmla };
-    styleCell(pendCell, { fill: fillPink2 });
+    styleCell(pendCell, { fill: fillPink2, size: 11 });
 
     // List of pending: MID+& concatenation — no TEXTJOIN, works in Excel 2007+
     const pendlParts = subjects.map((_, i) => {
@@ -833,7 +852,7 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     // Prefix each failing subject with ", " then MID(result,3,1000) strips the leading ", "
     const pendlCell = ws.getCell(r, PENDL_COL);
     pendlCell.value = { formula: `MID(${pendlParts.join('&')},3,1000)` };
-    styleCell(pendlCell, { fill: fillPink2, halign: 'left', wrap: true });
+    styleCell(pendlCell, { fill: fillPink2, halign: 'left', wrap: true, size: 11 });
 
     ws.getCell(r, PASA_COL).border = border;
   }
@@ -936,8 +955,10 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
   }
   for (let r = SR; r <= ROW_PCT; r++) setBorderSide(r, RES_COL, { right: medSide });
 
-  const ts      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const outPath = path.join(OUT_DIR, `SEM_Marks_Generated_${ts}.xlsx`);
+  const safeLabel = (semLabel  || 'SEM' ).replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const safeExam  = (examPath  || 'exam').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const ts        = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const outPath   = path.join(OUT_DIR, `${safeLabel}_${safeExam}_result_${ts}.xlsx`);
   await wb.xlsx.writeFile(outPath);
   log('info', `Excel saved: ${outPath}`);
   return outPath;
@@ -957,10 +978,11 @@ app.post('/api/excel/generate', async (_req, res) => {
       session.results,
       subjects,
       credits,
-      cfg.collegeName || '',
-      cfg.batchName   || '',
-      cfg.examName    || '',
-      cfg.semLabel    || 'Semester'
+      cfg.collegeName  || '',
+      cfg.batchName    || '',
+      cfg.examName     || '',
+      cfg.semLabel     || 'Semester',
+      session.examPath || cfg.examPath || ''
     );
     res.json({ ok: true, filename: path.basename(outPath) });
   } catch (err) {
@@ -972,7 +994,7 @@ app.post('/api/excel/generate', async (_req, res) => {
 // Download latest Excel
 app.get('/api/excel/download', (_req, res) => {
   const files = fs.readdirSync(OUT_DIR)
-    .filter(f => f.startsWith('SEM_Marks_Generated_') && f.endsWith('.xlsx'))
+    .filter(f => f.endsWith('.xlsx') && !f.startsWith('~$'))
     .map(f => ({ name: f, mtime: fs.statSync(path.join(OUT_DIR, f)).mtime }))
     .sort((a, b) => b.mtime - a.mtime);
 

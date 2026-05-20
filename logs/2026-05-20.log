@@ -103,3 +103,36 @@
 {"t":"2026-05-20T15:37:01.896Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
 {"t":"2026-05-20T15:37:04.433Z","level":"info","msg":"Generating Excel for 2 students"}
 {"t":"2026-05-20T15:37:04.537Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\SEM_Marks_Generated_2026-05-20T15-37-04.xlsx"}
+{"t":"2026-05-20T15:48:43.673Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:49:20.512Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T15:50:34.281Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T15:50:55.105Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T15:50:55.108Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T15:50:55.110Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T15:50:55.111Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T15:50:58.360Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T15:50:58.484Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-20T15-50-58.xlsx"}
+{"t":"2026-05-20T16:00:25.770Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T16:00:30.140Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T16:00:38.749Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T16:00:38.750Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T16:00:38.751Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T16:00:38.751Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T16:00:40.700Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T16:00:40.791Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-20T16-00-40.xlsx"}
+{"t":"2026-05-20T16:04:33.587Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T16:04:54.138Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T16:05:03.978Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T16:05:03.979Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T16:05:03.980Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T16:05:03.981Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T16:05:05.921Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T16:05:06.009Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-20T16-05-05.xlsx"}
+{"t":"2026-05-20T16:05:57.443Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-20T16:06:06.560Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-20T16:06:10.765Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-20T16:06:10.767Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-20T16:06:10.769Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-20T16:06:10.769Z","level":"info","msg":"Session complete","data":{"results":2,"skipped":0,"errors":0}}
+{"t":"2026-05-20T16:06:12.781Z","level":"info","msg":"Generating Excel for 2 students"}
+{"t":"2026-05-20T16:06:12.904Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-20T16-06-12.xlsx"}
