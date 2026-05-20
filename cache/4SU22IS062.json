@@ -1,0 +1,64 @@
+{
+  "fetchedAt": "2026-05-20T03:18:23.957Z",
+  "data": {
+    "usn": "4SU22IS062",
+    "name": "VIKAS BHAT D",
+    "semester": 7,
+    "subjects": [
+      {
+        "code": "BIS701",
+        "name": "BIG DATA ANALYTICS",
+        "internal": 47,
+        "external": 32,
+        "total": 79,
+        "result": "P",
+        "date": "2026-02-06"
+      },
+      {
+        "code": "BCS702",
+        "name": "PARALLEL COMPUTING",
+        "internal": 47,
+        "external": 26,
+        "total": 73,
+        "result": "P",
+        "date": "2026-02-06"
+      },
+      {
+        "code": "BIS703",
+        "name": "INFORMATION & NETWORK SECURITY",
+        "internal": 45,
+        "external": 27,
+        "total": 72,
+        "result": "P",
+        "date": "2026-02-06"
+      },
+      {
+        "code": "BIS786",
+        "name": "MAJOR PROJECT PHASE-II",
+        "internal": 96,
+        "external": 97,
+        "total": 193,
+        "result": "P",
+        "date": "2026-02-06"
+      },
+      {
+        "code": "BCS714A",
+        "name": "DEEP LEARNING",
+        "internal": 41,
+        "external": 27,
+        "total": 68,
+        "result": "P",
+        "date": "2026-02-06"
+      },
+      {
+        "code": "BTE755C",
+        "name": "EMBEDDED SYSTEM APPLICATIONS",
+        "internal": 42,
+        "external": 34,
+        "total": 76,
+        "result": "P",
+        "date": "2026-02-06"
+      }
+    ]
+  }
+}

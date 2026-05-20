@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VTU Result Automation</title>
+<style>
+/* ── Reset + Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg       : #F5F3EE;
+  --surface  : #FFFFFF;
+  --border   : #C9C6BE;
+  --border-lt: #E4E1D9;
+  --text     : #1A1918;
+  --muted    : #6E6B65;
+  --faint    : #9E9B96;
+  --accent   : #1D4ED8;
+  --accent-lt: #EFF3FF;
+  --green    : #15803D;
+  --green-lt : #F0FDF4;
+  --red      : #B91C1C;
+  --red-lt   : #FEF2F2;
+  --amber    : #92400E;
+  --amber-lt : #FFFBEB;
+  --mono     : 'Courier New', 'Consolas', monospace;
+  --sans     : system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --r        : 4px;
+  --r-lg     : 8px;
+  --shadow   : 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+}
+
+html { font-size: 14px; }
+body {
+  font-family : var(--sans);
+  background  : var(--bg);
+  color       : var(--text);
+  min-height  : 100vh;
+  line-height : 1.5;
+}
+
+/* dot-grid background on body */
+body {
+  background-image: radial-gradient(circle, #C9C6BE 1px, transparent 1px);
+  background-size : 20px 20px;
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+#app { max-width: 860px; margin: 0 auto; padding: 24px 20px 80px; }
+
+/* ── Header ───────────────────────────────────────────────── */
+header {
+  background : var(--surface);
+  border     : 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding    : 20px 24px;
+  margin-bottom: 20px;
+  box-shadow : var(--shadow);
+  display    : flex;
+  align-items: center;
+  gap        : 24px;
+  flex-wrap  : wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand h1 {
+  font-size  : 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.brand .sub {
+  font-size : .75rem;
+  color     : var(--muted);
+  font-family: var(--mono);
+}
+
+/* Step nav */
+.step-nav {
+  display    : flex;
+  gap        : 2px;
+  margin-left: auto;
+  background : var(--bg);
+  border     : 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding    : 3px;
+}
+.step-btn {
+  display        : flex;
+  align-items    : center;
+  gap            : 6px;
+  padding        : 6px 12px;
+  border         : none;
+  border-radius  : calc(var(--r-lg) - 2px);
+  background     : transparent;
+  color          : var(--muted);
+  font-size      : .8rem;
+  font-family    : var(--sans);
+  cursor         : pointer;
+  transition     : all .15s;
+  white-space    : nowrap;
+}
+.step-btn .num {
+  width        : 18px;
+  height       : 18px;
+  border-radius: 50%;
+  background   : var(--border);
+  color        : var(--muted);
+  font-size    : .7rem;
+  font-weight  : 700;
+  display      : flex;
+  align-items  : center;
+  justify-content: center;
+  flex-shrink  : 0;
+  transition   : all .15s;
+}
+.step-btn:hover { color: var(--text); }
+.step-btn.active {
+  background : var(--surface);
+  color      : var(--text);
+  font-weight: 600;
+  box-shadow : var(--shadow);
+}
+.step-btn.active .num { background: var(--accent); color: white; }
+.step-btn.done .num   { background: var(--green);  color: white; }
+.step-btn.done        { color: var(--green); }
+
+/* ── Panels ───────────────────────────────────────────────── */
+.panel {
+  background   : var(--surface);
+  border       : 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow   : var(--shadow);
+  margin-bottom: 16px;
+  display      : none;
+}
+.panel.visible { display: block; }
+.panel-header {
+  padding      : 16px 24px;
+  border-bottom: 1px solid var(--border-lt);
+  display      : flex;
+  align-items  : center;
+  justify-content: space-between;
+  gap          : 12px;
+}
+.panel-header h2 {
+  font-size  : .95rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.panel-body { padding: 24px; }
+
+/* ── Form Elements ────────────────────────────────────────── */
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.span-2 { grid-column: span 2; }
+.field.span-3 { grid-column: span 3; }
+label {
+  font-size  : .75rem;
+  font-weight: 600;
+  color      : var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+input[type=text], input[type=number], textarea, select {
+  font-family : var(--sans);
+  font-size   : .875rem;
+  padding     : 8px 10px;
+  border      : 1px solid var(--border);
+  border-radius: var(--r);
+  background  : var(--surface);
+  color       : var(--text);
+  width       : 100%;
+  outline     : none;
+  transition  : border-color .15s, box-shadow .15s;
+}
+input[type=text]:focus, input[type=number]:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow  : 0 0 0 3px rgba(29,78,216,.1);
+}
+input.mono { font-family: var(--mono); font-size: .8rem; }
+.hint { font-size: .72rem; color: var(--faint); margin-top: 2px; }
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+  display        : inline-flex;
+  align-items    : center;
+  gap            : 6px;
+  padding        : 8px 16px;
+  border         : 1px solid transparent;
+  border-radius  : var(--r);
+  font-family    : var(--sans);
+  font-size      : .825rem;
+  font-weight    : 600;
+  cursor         : pointer;
+  transition     : all .15s;
+  white-space    : nowrap;
+  text-decoration: none;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary  { background: var(--accent); color: white; }
+.btn-primary:hover:not(:disabled) { background: #1e40af; }
+.btn-outline  { background: transparent; border-color: var(--border); color: var(--text); }
+.btn-outline:hover:not(:disabled) { background: var(--bg); border-color: var(--muted); }
+.btn-danger   { background: transparent; border-color: var(--border); color: var(--red); }
+.btn-danger:hover:not(:disabled)  { background: var(--red-lt); border-color: var(--red); }
+.btn-sm { padding: 5px 10px; font-size: .78rem; }
+.btn-ghost {
+  background: transparent; border: none; color: var(--muted);
+  padding: 4px 8px; font-size: .8rem; cursor: pointer;
+  border-radius: var(--r); transition: all .15s;
+}
+.btn-ghost:hover { color: var(--text); background: var(--bg); }
+
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-group.right { justify-content: flex-end; }
+
+/* ── Upload drop zone ─────────────────────────────────────── */
+.drop-zone {
+  display      : block;          /* label is inline by default */
+  border       : 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding      : 32px 24px;
+  text-align   : center;
+  cursor       : pointer;
+  transition   : all .2s;
+  /* override general label styles that bleed in */
+  text-transform: none;
+  letter-spacing: normal;
+  color        : inherit;
+  font-weight  : normal;
+  font-size    : inherit;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background  : var(--accent-lt);
+}
+.drop-zone input[type=file] { display: none; }
+.drop-zone .icon  { display: block; margin-bottom: 8px; line-height: 1; }
+.drop-zone .title { font-size: .875rem; font-weight: 600; color: var(--text); }
+.drop-zone .sub   { font-size: .78rem; color: var(--muted); margin-top: 4px; font-weight: 400; }
+
+/* ── Divider ──────────────────────────────────────────────── */
+.divider {
+  display    : flex;
+  align-items: center;
+  gap        : 12px;
+  color      : var(--muted);
+  font-size  : .75rem;
+  margin     : 16px 0;
+}
+.divider::before, .divider::after {
+  content   : '';
+  flex      : 1;
+  height    : 1px;
+  background: var(--border-lt);
+}
+
+/* ── Subjects editor ──────────────────────────────────────── */
+.subjects-table { width: 100%; border-collapse: collapse; }
+.subjects-table th {
+  text-align  : left;
+  font-size   : .7rem;
+  font-weight : 600;
+  color       : var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding     : 6px 8px;
+  border-bottom: 1px solid var(--border-lt);
+}
+.subjects-table td { padding: 4px 4px; vertical-align: middle; }
+.subjects-table td input {
+  padding    : 5px 8px;
+  font-size  : .8rem;
+}
+.subjects-table .mono { font-family: var(--mono); }
+.subjects-table .del-btn {
+  background: none; border: none; color: var(--faint);
+  cursor: pointer; font-size: 1rem; padding: 4px 6px;
+  border-radius: var(--r); transition: all .15s;
+}
+.subjects-table .del-btn:hover { color: var(--red); background: var(--red-lt); }
+
+/* ── USN list preview ─────────────────────────────────────── */
+.usn-chips {
+  display  : flex;
+  flex-wrap: wrap;
+  gap      : 6px;
+  max-height: 160px;
+  overflow : auto;
+  padding  : 12px;
+  border   : 1px solid var(--border-lt);
+  border-radius: var(--r);
+  background: var(--bg);
+}
+.chip {
+  font-family: var(--mono);
+  font-size  : .75rem;
+  padding    : 3px 8px;
+  border-radius: 3px;
+  background : var(--surface);
+  border     : 1px solid var(--border);
+  color      : var(--text);
+}
+.chip.cached  { border-color: var(--green); color: var(--green); background: var(--green-lt); }
+.chip.pending { border-color: var(--amber); color: var(--amber); background: var(--amber-lt); }
+.chip.error   { border-color: var(--red);   color: var(--red);   background: var(--red-lt);   }
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.progress-wrap {
+  background   : var(--bg);
+  border       : 1px solid var(--border-lt);
+  border-radius: var(--r-lg);
+  padding      : 12px 16px;
+  margin-bottom: 20px;
+}
+.progress-info {
+  display        : flex;
+  justify-content: space-between;
+  align-items    : center;
+  margin-bottom  : 8px;
+  font-size      : .8rem;
+}
+.progress-info .label { color: var(--muted); }
+.progress-info .count { font-family: var(--mono); font-weight: 600; }
+.progress-bar {
+  height       : 6px;
+  background   : var(--border-lt);
+  border-radius: 99px;
+  overflow     : hidden;
+}
+.progress-fill {
+  height    : 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+.progress-fill.done { background: var(--green); }
+
+/* ── Captcha card ─────────────────────────────────────────── */
+.captcha-card {
+  max-width    : 460px;
+  margin       : 0 auto;
+  border       : 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow     : hidden;
+  box-shadow   : var(--shadow-md);
+}
+.captcha-head {
+  background   : var(--bg);
+  border-bottom: 1px solid var(--border-lt);
+  padding      : 10px 16px;
+  display      : flex;
+  align-items  : center;
+  justify-content: space-between;
+  gap          : 8px;
+}
+.captcha-head .usn-tag {
+  font-family: var(--mono);
+  font-size  : .85rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.captcha-head .pos-tag {
+  font-size  : .72rem;
+  color      : var(--muted);
+  font-family: var(--mono);
+}
+.captcha-img-wrap {
+  background  : #1a1918;
+  display     : flex;
+  align-items : center;
+  justify-content: center;
+  padding     : 20px;
+  min-height  : 110px;
+}
+.captcha-img-wrap img {
+  image-rendering: pixelated;
+  display         : block;
+  height          : 80px;
+  width           : auto;
+  max-width       : 100%;
+}
+.captcha-img-wrap .loading-indicator {
+  color    : rgba(255,255,255,.4);
+  font-size: .8rem;
+  font-family: var(--mono);
+}
+.captcha-input-area {
+  padding: 16px;
+  border-top: 1px solid var(--border-lt);
+}
+.captcha-input-row {
+  display: flex;
+  gap    : 8px;
+}
+.captcha-input-row input {
+  flex       : 1;
+  font-family: var(--mono);
+  font-size  : 1.1rem;
+  letter-spacing: .15em;
+  text-align : center;
+  border-radius: var(--r);
+}
+.captcha-actions {
+  display        : flex;
+  justify-content: space-between;
+  align-items    : center;
+  margin-top     : 10px;
+}
+.captcha-hint { font-size: .72rem; color: var(--muted); }
+
+/* shake animation */
+@keyframes shake {
+  0%,100%{ transform: translateX(0); }
+  20%    { transform: translateX(-6px); }
+  40%    { transform: translateX(6px); }
+  60%    { transform: translateX(-4px); }
+  80%    { transform: translateX(4px); }
+}
+.shake { animation: shake .4s ease; }
+
+/* ── Result feed ──────────────────────────────────────────── */
+.result-feed {
+  max-height : 260px;
+  overflow   : auto;
+  display    : flex;
+  flex-direction: column;
+  gap        : 4px;
+}
+.feed-item {
+  display    : flex;
+  align-items: baseline;
+  gap        : 10px;
+  padding    : 6px 10px;
+  border-radius: var(--r);
+  font-size  : .8rem;
+  border     : 1px solid transparent;
+  transition : background .2s;
+}
+.feed-item.success { background: var(--green-lt); border-color: #BBF7D0; }
+.feed-item.cached  { background: var(--accent-lt); border-color: #BFDBFE; }
+.feed-item.skipped { background: var(--amber-lt); border-color: #FDE68A; }
+.feed-item.error   { background: var(--red-lt);   border-color: #FECACA; }
+.feed-item .fi-usn { font-family: var(--mono); font-weight: 700; font-size: .75rem; min-width: 110px; }
+.feed-item .fi-name{ color: var(--text); flex: 1; }
+.feed-item .fi-tag {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; padding: 2px 6px; border-radius: 3px;
+}
+.fi-tag.ok     { background: var(--green); color: white; }
+.fi-tag.cached { background: var(--accent); color: white; }
+.fi-tag.skip   { background: var(--amber); color: white; }
+.fi-tag.fail   { background: var(--red);   color: white; }
+
+/* ── Summary table ────────────────────────────────────────── */
+.summary-grid {
+  display  : grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap      : 12px;
+  margin-bottom: 20px;
+}
+.stat-box {
+  border       : 1px solid var(--border-lt);
+  border-radius: var(--r-lg);
+  padding      : 14px 16px;
+  text-align   : center;
+}
+.stat-box .stat-num { font-size: 2rem; font-weight: 700; line-height: 1; }
+.stat-box .stat-lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+.stat-box.green .stat-num { color: var(--green); }
+.stat-box.amber .stat-num { color: var(--amber); }
+.stat-box.red   .stat-num { color: var(--red); }
+
+/* ── Cache panel ──────────────────────────────────────────── */
+.cache-entry {
+  display    : flex;
+  align-items: center;
+  gap        : 10px;
+  padding    : 7px 12px;
+  border-bottom: 1px solid var(--border-lt);
+  font-size  : .8rem;
+}
+.cache-entry:last-child { border-bottom: none; }
+.cache-entry .ce-usn { font-family: var(--mono); font-weight: 700; flex: 1; }
+.cache-entry .ce-time { color: var(--muted); font-size: .72rem; }
+.ce-badge {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; padding: 2px 6px; border-radius: 3px;
+}
+.ce-badge.fresh  { background: var(--green-lt); color: var(--green); border: 1px solid #BBF7D0; }
+.ce-badge.expired{ background: var(--red-lt);   color: var(--red);   border: 1px solid #FECACA; }
+
+/* ── Log viewer ───────────────────────────────────────────── */
+.log-panel-toggle {
+  width        : 100%;
+  background   : var(--surface);
+  border       : 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding      : 10px 16px;
+  display      : flex;
+  align-items  : center;
+  justify-content: space-between;
+  cursor       : pointer;
+  font-size    : .8rem;
+  font-weight  : 600;
+  color        : var(--muted);
+  transition   : all .15s;
+  box-shadow   : var(--shadow);
+}
+.log-panel-toggle:hover { color: var(--text); }
+.log-panel-toggle .arrow { transition: transform .2s; }
+.log-panel-toggle.open .arrow { transform: rotate(180deg); }
+.log-viewer {
+  background   : #1A1918;
+  border       : 1px solid #333;
+  border-radius: var(--r-lg);
+  margin-top   : 6px;
+  max-height   : 300px;
+  overflow     : auto;
+  display      : none;
+  padding      : 12px;
+}
+.log-viewer.visible { display: block; }
+.log-line {
+  font-family: var(--mono);
+  font-size  : .72rem;
+  padding    : 1.5px 0;
+  display    : flex;
+  gap        : 10px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.log-line .lt    { color: #555; min-width: 80px; }
+.log-line .ll    { min-width: 42px; }
+.log-line .lm    { color: #ccc; flex: 1; }
+.log-line.info   .ll { color: #60a5fa; }
+.log-line.warn   .ll { color: #fbbf24; }
+.log-line.error  .ll { color: #f87171; }
+.log-line.debug  .ll { color: #6b7280; }
+
+/* ── Toast ────────────────────────────────────────────────── */
+#toast-area {
+  position  : fixed;
+  bottom    : 24px;
+  right     : 24px;
+  display   : flex;
+  flex-direction: column;
+  gap       : 8px;
+  z-index   : 9999;
+}
+.toast {
+  font-size    : .8rem;
+  padding      : 10px 16px;
+  border-radius: var(--r-lg);
+  background   : var(--text);
+  color        : white;
+  box-shadow   : var(--shadow-md);
+  max-width    : 320px;
+  opacity      : 0;
+  transform    : translateY(8px);
+  transition   : all .2s;
+  display      : flex;
+  align-items  : center;
+  gap          : 8px;
+}
+.toast.show   { opacity: 1; transform: translateY(0); }
+.toast.success{ background: var(--green); }
+.toast.error  { background: var(--red); }
+.toast.warn   { background: #B45309; }
+
+/* ── Loader overlay ───────────────────────────────────────── */
+.loader-overlay {
+  position      : absolute;
+  inset         : 0;
+  background    : rgba(255,255,255,.75);
+  display       : none;
+  align-items   : center;
+  justify-content: center;
+  border-radius : var(--r-lg);
+  z-index       : 10;
+}
+.loader-overlay.visible { display: flex; }
+.spinner {
+  width : 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Textarea ─────────────────────────────────────────────── */
+textarea {
+  resize    : vertical;
+  min-height: 100px;
+  font-family: var(--mono);
+  font-size : .8rem;
+}
+
+/* ── Misc helpers ─────────────────────────────────────────── */
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.text-muted { color: var(--muted); font-size: .8rem; }
+.text-sm    { font-size: .8rem; }
+.sep { height: 1px; background: var(--border-lt); margin: 16px 0; }
+.section-label {
+  font-size    : .72rem;
+  font-weight  : 600;
+  color        : var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 10px;
+}
+.empty-state {
+  text-align : center;
+  color      : var(--muted);
+  padding    : 24px;
+  font-size  : .8rem;
+}
+.relative { position: relative; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header>
+    <div class="brand">
+      <h1>VTU Result Automation</h1>
+      <span class="sub">results.vtu.ac.in</span>
+    </div>
+    <nav class="step-nav">
+      <button class="step-btn active" data-step="1">
+        <span class="num">1</span> Setup
+      </button>
+      <button class="step-btn" data-step="2">
+        <span class="num">2</span> Students
+      </button>
+      <button class="step-btn" data-step="3">
+        <span class="num">3</span> Capture
+      </button>
+      <button class="step-btn" data-step="4">
+        <span class="num">4</span> Export
+      </button>
+    </nav>
+  </header>
+
+  <!-- ── Step 1: Setup ──────────────────────────────────── -->
+  <div id="step-1" class="panel visible">
+    <div class="panel-header">
+      <h2>Exam Configuration</h2>
+      <div class="btn-group">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer">
+          Upload config.json
+          <input type="file" id="config-file-upload" accept=".json" style="display:none">
+        </label>
+      </div>
+    </div>
+    <div class="panel-body">
+      <form id="config-form">
+        <div class="field-grid">
+          <div class="field">
+            <label>Exam Path *</label>
+            <input type="text" name="examPath" class="mono" placeholder="D25J26Ecbcs" required>
+            <span class="hint">Path segment from the VTU results URL</span>
+          </div>
+          <div class="field">
+            <label>Cache TTL (hours)</label>
+            <input type="number" name="cacheTtlHours" value="24" min="1" max="168">
+            <span class="hint">How long to keep cached results</span>
+          </div>
+          <div class="field span-2">
+            <label>College Name</label>
+            <input type="text" name="collegeName" placeholder="SDM Institute of Technology, Ujire">
+          </div>
+          <div class="field">
+            <label>Batch</label>
+            <input type="text" name="batchName" placeholder="FOURTH YEAR B.E. IS (2024-25)">
+          </div>
+          <div class="field">
+            <label>Exam</label>
+            <input type="text" name="examName" placeholder="Dec/Jan-2026 Examination Results">
+          </div>
+          <div class="field span-2">
+            <label>Semester Label</label>
+            <input type="text" name="semLabel" placeholder="VII Semester">
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Subjects -->
+        <div class="section-label">Subjects</div>
+        <div style="overflow:auto">
+          <table class="subjects-table" id="subjects-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Credits</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="subjects-body">
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-8">
+          <button type="button" class="btn btn-outline btn-sm" id="add-subject-btn">+ Add Subject</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="btn-group right">
+          <button type="submit" class="btn btn-primary">Save &amp; Continue →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Students ───────────────────────────────── -->
+  <div id="step-2" class="panel">
+    <div class="panel-header">
+      <h2>Student USN List</h2>
+      <span class="text-muted" id="usn-count-label"></span>
+    </div>
+    <div class="panel-body">
+
+      <label class="drop-zone" id="csv-drop-zone">
+        <input type="file" id="csv-file-upload" accept=".csv,.txt">
+        <div class="icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--faint);margin:0 auto">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div class="title">Drop CSV file here</div>
+        <div class="sub">or click to browse — one USN per row (comma-separated also works)</div>
+      </label>
+
+      <div class="divider">or paste USNs</div>
+
+      <div class="field">
+        <label>USN List</label>
+        <textarea id="usn-paste" placeholder="4SU22IS062&#10;4SU22IS063&#10;4SU22IS064&#10;..." rows="5"></textarea>
+        <span class="hint">One per line, or comma-separated</span>
+      </div>
+
+      <div id="usn-preview-area" class="mt-12" style="display:none">
+        <div class="section-label">Preview — <span id="usn-preview-count">0</span> USNs</div>
+        <div class="usn-chips" id="usn-chips"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="btn-group right">
+        <button class="btn btn-outline" id="back-to-setup">← Setup</button>
+        <button class="btn btn-primary" id="start-session-btn" disabled>Start Processing →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Capture ───────────────────────────────── -->
+  <div id="step-3" class="panel">
+    <div class="panel-header">
+      <h2>CAPTCHA Resolution</h2>
+      <span class="text-muted text-sm" id="session-status-label">Idle</span>
+    </div>
+    <div class="panel-body">
+
+      <!-- Progress -->
+      <div class="progress-wrap">
+        <div class="progress-info">
+          <span class="label" id="progress-label">Processing…</span>
+          <span class="count" id="progress-count">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Captcha card -->
+      <div id="captcha-section">
+        <div class="captcha-card">
+          <div class="captcha-head">
+            <span class="usn-tag" id="captcha-usn">—</span>
+            <span class="pos-tag" id="captcha-pos">0 / 0</span>
+          </div>
+          <div class="captcha-img-wrap" id="captcha-img-wrap">
+            <span class="loading-indicator">Loading captcha…</span>
+          </div>
+          <div class="captcha-input-area">
+            <div class="captcha-input-row">
+              <input type="text" id="captcha-input" class="mono" placeholder="enter code"
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                maxlength="10">
+              <button class="btn btn-primary" id="submit-captcha-btn">Submit</button>
+            </div>
+            <div class="captcha-actions">
+              <span class="captcha-hint" id="captcha-hint">Press Enter to submit</span>
+              <div class="btn-group">
+                <button class="btn btn-ghost btn-sm" id="retry-captcha-btn">↺ New image</button>
+                <button class="btn btn-ghost btn-sm" id="skip-usn-btn">Skip USN</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Done state -->
+      <div id="done-section" style="display:none; text-align:center; padding: 20px 0">
+        <div style="margin-bottom:10px">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <div style="font-weight:700; font-size:1rem; color: var(--green)">All USNs processed</div>
+        <div class="text-muted mt-8">Proceed to Export to generate the Excel file</div>
+        <button class="btn btn-primary mt-16" id="goto-export-btn">Go to Export →</button>
+      </div>
+
+      <!-- Result feed -->
+      <div class="sep mt-16"></div>
+      <div class="section-label">Activity</div>
+      <div class="result-feed" id="result-feed">
+        <div class="empty-state">Results will appear here as each USN is processed</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Step 4: Export ────────────────────────────────── -->
+  <div id="step-4" class="panel">
+    <div class="panel-header">
+      <h2>Export Excel</h2>
+    </div>
+    <div class="panel-body">
+
+      <div class="summary-grid" id="export-summary">
+        <div class="stat-box green">
+          <div class="stat-num" id="stat-ok">0</div>
+          <div class="stat-lbl">Results</div>
+        </div>
+        <div class="stat-box amber">
+          <div class="stat-num" id="stat-skip">0</div>
+          <div class="stat-lbl">Skipped</div>
+        </div>
+        <div class="stat-box red">
+          <div class="stat-num" id="stat-err">0</div>
+          <div class="stat-lbl">Errors</div>
+        </div>
+      </div>
+
+      <div class="text-muted mt-8" style="margin-bottom:16px">
+        Excel is generated from scratch using the subjects configured in Setup. No template file required.
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generate-excel-btn">Generate Excel</button>
+        <a class="btn btn-outline" id="download-excel-btn" href="/api/excel/download" style="display:none">
+          ↓ Download Excel
+        </a>
+      </div>
+
+      <div id="excel-status" class="mt-12"></div>
+
+    </div>
+  </div>
+
+  <!-- ── Cache Panel ────────────────────────────────────── -->
+  <div class="panel visible mt-20" id="cache-panel" style="margin-top:20px">
+    <div class="panel-header">
+      <h2>Result Cache</h2>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" id="refresh-cache-btn">Refresh</button>
+        <button class="btn btn-danger btn-sm" id="clear-cache-btn">Clear All</button>
+      </div>
+    </div>
+    <div class="relative">
+      <div class="loader-overlay" id="cache-loader"><div class="spinner"></div></div>
+      <div id="cache-list">
+        <div class="empty-state">No cached results</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Log Panel ──────────────────────────────────────── -->
+  <div style="margin-top:12px">
+    <button class="log-panel-toggle" id="log-toggle">
+      <span>Activity Log</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="log-viewer" id="log-viewer">
+      <div class="log-line debug">
+        <span class="lt">--:--:--</span>
+        <span class="ll">debug</span>
+        <span class="lm">Log output will appear here</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Toast area -->
+<div id="toast-area"></div>
+
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  currentStep : 1,
+  usns        : [],
+  examPath    : '',
+  sessionStatus: 'idle',
+  logOpen     : false,
+  logPollTimer: null
+};
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const $$ = (sel, root = document) => root.querySelectorAll(sel);
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'default', duration = 3500) {
+  const area = $('toast-area');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  area.appendChild(el);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('show'));
+  });
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 200);
+  }, duration);
+}
+
+// ── API wrapper ───────────────────────────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (body != null) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({ error: 'Invalid server response' }));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ── Step navigation ──────────────────────────────────────────────────────────
+function goToStep(n) {
+  $$('.panel').forEach(p => p.classList.remove('visible'));
+  $$('.step-btn').forEach(b => {
+    b.classList.remove('active');
+    if (+b.dataset.step === n) b.classList.add('active');
+  });
+  $(`step-${n}`).classList.add('visible');
+  state.currentStep = n;
+  if (n === 4) updateExportSummary();
+}
+
+$$('.step-btn').forEach(btn => {
+  btn.addEventListener('click', () => goToStep(+btn.dataset.step));
+});
+
+// ── Step 1: Config ───────────────────────────────────────────────────────────
+
+// Load existing config on page load
+async function loadConfig() {
+  try {
+    const cfg = await api('GET', '/api/config');
+    populateConfigForm(cfg);
+  } catch { /* first run, no config */ }
+}
+
+function populateConfigForm(cfg) {
+  const form = $('config-form');
+  ['examPath','cacheTtlHours','collegeName','batchName','examName','semLabel'].forEach(k => {
+    const el = form.elements[k];
+    if (el && cfg[k] != null) el.value = cfg[k];
+  });
+  if (cfg.examPath) state.examPath = cfg.examPath;
+  if (Array.isArray(cfg.subjects)) {
+    $('subjects-body').innerHTML = '';
+    cfg.subjects.forEach(s => addSubjectRow(s));
+  }
+}
+
+function addSubjectRow(s = {}) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="mono" name="subj-code" placeholder="BIS701" value="${s.code||''}" style="width:100px"></td>
+    <td><input type="text" name="subj-name" placeholder="Big Data Analytics" value="${s.name||''}" style="width:240px"></td>
+    <td><input type="number" name="subj-credit" placeholder="4" value="${s.credit||''}" style="width:60px" min="1" max="10"></td>
+    <td><button type="button" class="del-btn" title="Remove">×</button></td>`;
+  tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
+  $('subjects-body').appendChild(tr);
+}
+
+$('add-subject-btn').addEventListener('click', () => addSubjectRow());
+
+// JSON file upload
+$('config-file-upload').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const cfg  = JSON.parse(text);
+    populateConfigForm(cfg);
+    toast('Config loaded from file', 'success');
+  } catch { toast('Invalid JSON file', 'error'); }
+  e.target.value = '';
+});
+
+$('config-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target;
+  const subjects = [];
+  $$('tr', $('subjects-body')).forEach(tr => {
+    const code   = tr.querySelector('[name=subj-code]').value.trim();
+    const name   = tr.querySelector('[name=subj-name]').value.trim();
+    const credit = +tr.querySelector('[name=subj-credit]').value || 0;
+    if (code && name) subjects.push({ code, name, credit });
+  });
+
+  const cfg = {
+    examPath     : form.elements.examPath.value.trim(),
+    cacheTtlHours: +form.elements.cacheTtlHours.value || 24,
+    collegeName  : form.elements.collegeName.value.trim(),
+    batchName    : form.elements.batchName.value.trim(),
+    examName     : form.elements.examName.value.trim(),
+    semLabel     : form.elements.semLabel.value.trim(),
+    subjects
+  };
+
+  if (!cfg.examPath) { toast('Exam Path is required', 'error'); return; }
+
+  try {
+    await api('POST', '/api/config', cfg);
+    state.examPath = cfg.examPath;
+    toast('Configuration saved', 'success');
+    $$('.step-btn')[0].classList.add('done');
+    goToStep(2);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+});
+
+// ── Step 2: Students ──────────────────────────────────────────────────────────
+function parseUSNText(text) {
+  return [...new Set(
+    text.split(/[\r\n,;]+/)
+      .map(s => s.trim().toUpperCase())
+      .filter(s => /^[A-Z0-9]{7,15}$/.test(s))
+  )];
+}
+
+function updateUSNPreview(usns) {
+  state.usns = usns;
+  const area  = $('usn-preview-area');
+  const chips = $('usn-chips');
+  const count = $('usn-preview-count');
+  const label = $('usn-count-label');
+  const btn   = $('start-session-btn');
+
+  if (!usns.length) {
+    area.style.display = 'none';
+    btn.disabled = true;
+    label.textContent = '';
+    return;
+  }
+
+  area.style.display = '';
+  count.textContent  = usns.length;
+  label.textContent  = `${usns.length} USN${usns.length !== 1 ? 's' : ''}`;
+  btn.disabled       = false;
+
+  chips.innerHTML = '';
+  usns.forEach(u => {
+    const ch = document.createElement('span');
+    ch.className = 'chip';
+    ch.textContent = u;
+    chips.appendChild(ch);
+  });
+}
+
+// CSV upload
+const csvDrop = $('csv-drop-zone');
+$('csv-file-upload').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch('/api/upload/csv', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    updateUSNPreview(data.usns);
+    toast(`${data.usns.length} USNs loaded from CSV`, 'success');
+  } catch (err) { toast(err.message, 'error'); }
+  e.target.value = '';
+});
+
+['dragover','dragleave','drop'].forEach(ev => {
+  csvDrop.addEventListener(ev, e => {
+    e.preventDefault();
+    if (ev === 'dragover') csvDrop.classList.add('drag-over');
+    else if (ev === 'dragleave') csvDrop.classList.remove('drag-over');
+    else {
+      csvDrop.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) $('csv-file-upload').dispatchEvent(Object.assign(new Event('change'), {
+        target: Object.assign($('csv-file-upload'), { files: e.dataTransfer.files })
+      }));
+    }
+  });
+});
+
+$('usn-paste').addEventListener('input', e => {
+  updateUSNPreview(parseUSNText(e.target.value));
+});
+
+$('back-to-setup').addEventListener('click', () => goToStep(1));
+
+$('start-session-btn').addEventListener('click', async () => {
+  if (!state.usns.length) { toast('No USNs entered', 'error'); return; }
+  const examPath = state.examPath || $('config-form').elements.examPath.value.trim();
+  if (!examPath) { toast('Set Exam Path in Setup first', 'error'); goToStep(1); return; }
+
+  $('start-session-btn').disabled = true;
+  $('start-session-btn').textContent = 'Starting…';
+
+  try {
+    const res = await api('POST', '/api/session/start', { usns: state.usns, examPath });
+    $$('.step-btn')[1].classList.add('done');
+    goToStep(3);
+    handleSessionResponse(res);
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    $('start-session-btn').disabled = false;
+    $('start-session-btn').textContent = 'Start Processing →';
+  }
+});
+
+// ── Step 3: Capture ──────────────────────────────────────────────────────────
+function handleSessionResponse(res) {
+  state.sessionStatus = res.status;
+  updateProgress(res.progress);
+
+  if (res.event) handleFeedEvent(res.event, res.progress);
+
+  if (res.status === 'captcha-wait') {
+    showCaptcha(res.captchaImg, res.currentUSN, res.progress);
+  } else if (res.status === 'done') {
+    showDone(res.progress);
+  } else if (res.status === 'wrong-captcha') {
+    shakeCaptchaInput();
+    showCaptcha(res.captchaImg, res.currentUSN, null);
+    toast('Wrong captcha — try again', 'warn');
+  }
+}
+
+function updateProgress(prog) {
+  if (!prog) return;
+  const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+  const fill = $('progress-fill');
+  fill.style.width   = pct + '%';
+  fill.className     = 'progress-fill' + (pct === 100 ? ' done' : '');
+  $('progress-count').textContent = `${prog.done} / ${prog.total}`;
+  $('progress-label').textContent = pct === 100
+    ? 'Complete'
+    : `Processing ${prog.total - prog.done} remaining…`;
+  $('session-status-label').textContent = state.sessionStatus;
+}
+
+function showCaptcha(imgSrc, usn, prog) {
+  $('captcha-section').style.display = '';
+  $('done-section').style.display    = 'none';
+  $('captcha-usn').textContent       = usn || '—';
+
+  if (prog) {
+    $('captcha-pos').textContent = `${prog.done + 1} / ${prog.total}`;
+  }
+
+  const wrap = $('captcha-img-wrap');
+  wrap.innerHTML = '';
+
+  if (imgSrc) {
+    const img = document.createElement('img');
+    img.src = imgSrc;
+    img.alt = 'VTU CAPTCHA';
+    wrap.appendChild(img);
+  } else {
+    wrap.innerHTML = '<span class="loading-indicator">Loading…</span>';
+  }
+
+  const input = $('captcha-input');
+  input.value = '';
+  setTimeout(() => input.focus(), 50);
+}
+
+function showDone(prog) {
+  $('captcha-section').style.display = 'none';
+  $('done-section').style.display    = '';
+  updateProgress(prog);
+  $$('.step-btn')[2].classList.add('done');
+  toast('All USNs processed!', 'success', 5000);
+}
+
+function shakeCaptchaInput() {
+  const el = $('captcha-input');
+  el.classList.remove('shake');
+  void el.offsetWidth; // reflow
+  el.classList.add('shake');
+  el.value = '';
+  el.focus();
+}
+
+function handleFeedEvent(ev, prog) {
+  const feed = $('result-feed');
+  if (feed.querySelector('.empty-state')) feed.innerHTML = '';
+
+  const item  = document.createElement('div');
+  const usnText = ev.usn || '';
+
+  if (ev.type === 'result') {
+    item.className = 'feed-item success';
+    item.innerHTML = `<span class="fi-usn">${usnText}</span><span class="fi-name">${ev.name || ''} &mdash; ${ev.subjects||0} subjects</span><span class="fi-tag ok">fetched</span>`;
+  } else if (ev.type === 'cached') {
+    item.className = 'feed-item cached';
+    item.innerHTML = `<span class="fi-usn">${usnText}</span><span class="fi-name">${ev.name||''}</span><span class="fi-tag cached">cached</span>`;
+  } else if (ev.type === 'no-result' || ev.type === 'skip') {
+    item.className = 'feed-item skipped';
+    item.innerHTML = `<span class="fi-usn">${usnText}</span><span class="fi-name">No result found</span><span class="fi-tag skip">skipped</span>`;
+  } else if (ev.type === 'parse-error') {
+    item.className = 'feed-item error';
+    item.innerHTML = `<span class="fi-usn">${usnText}</span><span class="fi-name">Could not parse response</span><span class="fi-tag fail">error</span>`;
+  }
+
+  if (item.className) {
+    feed.appendChild(item);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  // also mark chips in step 2
+  const chips = $('usn-chips');
+  if (chips) {
+    $$('.chip', chips).forEach(ch => {
+      if (ch.textContent === usnText) {
+        ch.className = 'chip ' + (ev.type === 'result' ? 'cached' : ev.type === 'no-result' ? 'pending' : 'error');
+      }
+    });
+  }
+}
+
+// Submit captcha
+async function submitCaptcha() {
+  const code = $('captcha-input').value.trim();
+  if (!code) { $('captcha-input').focus(); return; }
+
+  const btn = $('submit-captcha-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const res = await api('POST', '/api/captcha/submit', { captchaCode: code });
+    handleSessionResponse(res);
+    if (res.status === 'done' || res.status === 'captcha-wait') {
+      refreshCachePanel();
+    }
+  } catch (err) {
+    toast(err.message, 'error');
+    shakeCaptchaInput();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+  }
+}
+
+$('submit-captcha-btn').addEventListener('click', submitCaptcha);
+$('captcha-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitCaptcha();
+});
+
+$('retry-captcha-btn').addEventListener('click', async () => {
+  const btn = $('retry-captcha-btn');
+  btn.disabled = true;
+  const wrap = $('captcha-img-wrap');
+  wrap.innerHTML = '<span class="loading-indicator">Fetching new image…</span>';
+  try {
+    const res = await api('POST', '/api/captcha/retry');
+    showCaptcha(res.captchaImg, res.currentUSN, null);
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$('skip-usn-btn').addEventListener('click', async () => {
+  if (!confirm(`Skip this USN and move to the next one?`)) return;
+  try {
+    const res = await api('POST', '/api/captcha/skip');
+    if (res.skipped) handleFeedEvent({ type: 'skip', usn: res.skipped });
+    handleSessionResponse(res);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+});
+
+$('goto-export-btn').addEventListener('click', () => goToStep(4));
+
+// ── Step 4: Export ───────────────────────────────────────────────────────────
+function updateExportSummary() {
+  api('GET', '/api/session/status').then(res => {
+    const p = res.progress;
+    $('stat-ok').textContent   = Object.keys(p.results || {}).length;
+    $('stat-skip').textContent = (p.skipped || []).length;
+    $('stat-err').textContent  = (p.errors  || []).length;
+  }).catch(() => {});
+}
+
+$('generate-excel-btn').addEventListener('click', async () => {
+  const btn = $('generate-excel-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  $('excel-status').innerHTML = '';
+
+  try {
+    const res = await api('POST', '/api/excel/generate');
+    $('excel-status').innerHTML = `
+      <div style="color:var(--green);font-size:.85rem;margin-top:8px">
+        ✓ Excel generated: <code style="font-family:var(--mono)">${res.filename}</code>
+      </div>`;
+    $('download-excel-btn').style.display = '';
+    toast('Excel generated successfully', 'success');
+    $$('.step-btn')[3].classList.add('done');
+  } catch (err) {
+    $('excel-status').innerHTML = `<div style="color:var(--red);font-size:.8rem;margin-top:8px">✗ ${err.message}</div>`;
+    toast(err.message, 'error', 5000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Excel';
+  }
+});
+
+// ── Cache Panel ──────────────────────────────────────────────────────────────
+async function refreshCachePanel() {
+  const loader = $('cache-loader');
+  loader.classList.add('visible');
+  try {
+    const res  = await api('GET', '/api/cache');
+    const list = $('cache-list');
+    if (!res.entries.length) {
+      list.innerHTML = '<div class="empty-state">No cached results</div>';
+      return;
+    }
+    list.innerHTML = res.entries.map(e => {
+      const time = e.fetchedAt
+        ? new Date(e.fetchedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })
+        : '—';
+      const badge = e.expired
+        ? '<span class="ce-badge expired">Expired</span>'
+        : `<span class="ce-badge fresh">~${e.expiresInMin}m left</span>`;
+      return `
+        <div class="cache-entry">
+          <span class="ce-usn">${e.usn}</span>
+          <span class="ce-time">${time}</span>
+          ${badge}
+          <button class="btn-ghost btn-sm" onclick="clearCacheUSN('${e.usn}')" style="font-size:.75rem;padding:3px 7px">×</button>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    loader.classList.remove('visible');
+  }
+}
+
+window.clearCacheUSN = async function(usn) {
+  try {
+    await api('DELETE', `/api/cache/${usn}`);
+    toast(`Cache cleared: ${usn}`, 'success');
+    refreshCachePanel();
+  } catch (err) { toast(err.message, 'error'); }
+};
+
+$('clear-cache-btn').addEventListener('click', async () => {
+  if (!confirm('Clear ALL cached results?')) return;
+  try {
+    await api('DELETE', '/api/cache/all');
+    toast('All cache cleared', 'success');
+    refreshCachePanel();
+  } catch (err) { toast(err.message, 'error'); }
+});
+
+$('refresh-cache-btn').addEventListener('click', refreshCachePanel);
+
+// ── Log Panel ────────────────────────────────────────────────────────────────
+$('log-toggle').addEventListener('click', () => {
+  const toggle  = $('log-toggle');
+  const viewer  = $('log-viewer');
+  state.logOpen = !state.logOpen;
+  toggle.classList.toggle('open', state.logOpen);
+  viewer.classList.toggle('visible', state.logOpen);
+  if (state.logOpen) fetchLogs();
+});
+
+async function fetchLogs() {
+  try {
+    const res    = await api('GET', '/api/logs?limit=100');
+    const viewer = $('log-viewer');
+    viewer.innerHTML = '';
+    if (!res.entries.length) {
+      viewer.innerHTML = '<div class="log-line debug"><span class="lt">—</span><span class="ll">—</span><span class="lm">No log entries for today</span></div>';
+      return;
+    }
+    res.entries.forEach(e => {
+      const line  = document.createElement('div');
+      line.className = `log-line ${e.level || 'debug'}`;
+      const time  = e.t ? e.t.slice(11, 19) : '—';
+      const data  = e.data ? ` — ${JSON.stringify(e.data)}` : '';
+      line.innerHTML = `<span class="lt">${time}</span><span class="ll">${e.level||'?'}</span><span class="lm">${escHtml(e.msg || '')}${escHtml(data)}</span>`;
+      viewer.appendChild(line);
+    });
+    viewer.scrollTop = viewer.scrollHeight;
+  } catch { /* non-fatal */ }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Auto-refresh logs every 5s when open and processing
+setInterval(() => {
+  if (state.logOpen) fetchLogs();
+}, 5000);
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(async function init() {
+  await loadConfig();
+  refreshCachePanel();
+  // Restore session state if server already has one running
+  try {
+    const res = await api('GET', '/api/session/status');
+    if (res.status !== 'idle') {
+      updateProgress(res.progress);
+      if (res.status === 'captcha-wait') {
+        goToStep(3);
+        handleSessionResponse(res);
+      } else if (res.status === 'done') {
+        goToStep(4);
+      }
+    }
+  } catch { /* ignore */ }
+})();
+</script>
+</body>
+</html>
