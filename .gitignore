@@ -2,3 +2,5 @@ config.json
 Copy of 4SU22-Sem marks.xlsx
 output
 node_modules
+logs
+cache
