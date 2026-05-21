@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-20T14:49:48.618Z",
+  "fetchedAt": "2026-05-21T14:38:04.333Z",
   "data": {
     "usn": "4SU22IS044",
     "name": "SHREYA M N",
@@ -60,20 +60,20 @@
         "date": "2025-07-21"
       },
       {
-        "code": "BCS613A",
-        "name": "BLOCKCHAIN TECHNOLOGY",
-        "internal": 48,
-        "external": 29,
-        "total": 77,
-        "result": "P",
-        "date": "2025-07-21"
-      },
-      {
         "code": "BEC654A",
         "name": "DIGITAL SYSTEM DESIGN USING VERILOG",
         "internal": 33,
         "external": 29,
         "total": 62,
+        "result": "P",
+        "date": "2025-07-21"
+      },
+      {
+        "code": "BCS613A",
+        "name": "BLOCKCHAIN TECHNOLOGY",
+        "internal": 48,
+        "external": 29,
+        "total": 77,
         "result": "P",
         "date": "2025-07-21"
       },

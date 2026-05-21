@@ -1,0 +1,15 @@
+{
+  "port": 4000,
+  "dirs": {
+    "output": "output",
+    "logs": "logs",
+    "cache": "cache"
+  },
+  "cache": {
+    "ttlHours": 22
+  },
+  "cleanup": {
+    "outputMaxAgeDays": 2,
+    "logsMaxAgeDays": 3
+  }
+}

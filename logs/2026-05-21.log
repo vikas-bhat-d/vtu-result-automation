@@ -1,0 +1,60 @@
+{"t":"2026-05-21T14:06:55.065Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-21T14:17:28.090Z","level":"info","msg":"Cache cleared (all)"}
+{"t":"2026-05-21T14:24:45.086Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-21T14:25:17.597Z","level":"info","msg":"Session started: 3 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-21T14:25:17.604Z","level":"info","msg":"Preparing captcha for 4SU22IS062"}
+{"t":"2026-05-21T14:25:18.697Z","level":"debug","msg":"Captcha ready for 4SU22IS062"}
+{"t":"2026-05-21T14:25:34.185Z","level":"info","msg":"Submitting captcha for 4SU22IS062"}
+{"t":"2026-05-21T14:25:34.751Z","level":"debug","msg":"Cached: 4SU22IS062 [JJEcbcs25]"}
+{"t":"2026-05-21T14:25:34.755Z","level":"info","msg":"Result: 4SU22IS062 → VIKAS BHAT D (9 subjects)"}
+{"t":"2026-05-21T14:25:34.761Z","level":"info","msg":"Preparing captcha for 4SU22IS048"}
+{"t":"2026-05-21T14:25:35.550Z","level":"debug","msg":"Captcha ready for 4SU22IS048"}
+{"t":"2026-05-21T14:25:44.948Z","level":"info","msg":"Submitting captcha for 4SU22IS048"}
+{"t":"2026-05-21T14:25:45.367Z","level":"debug","msg":"Cached: 4SU22IS048 [JJEcbcs25]"}
+{"t":"2026-05-21T14:25:45.372Z","level":"info","msg":"Result: 4SU22IS048 → SOURABH H K (9 subjects)"}
+{"t":"2026-05-21T14:25:45.374Z","level":"info","msg":"Preparing captcha for 4SU22IS044"}
+{"t":"2026-05-21T14:25:46.041Z","level":"debug","msg":"Captcha ready for 4SU22IS044"}
+{"t":"2026-05-21T14:25:54.383Z","level":"info","msg":"Submitting captcha for 4SU22IS044"}
+{"t":"2026-05-21T14:25:54.742Z","level":"debug","msg":"Cached: 4SU22IS044 [JJEcbcs25]"}
+{"t":"2026-05-21T14:25:54.745Z","level":"info","msg":"Result: 4SU22IS044 → SHREYA M N (12 subjects)"}
+{"t":"2026-05-21T14:25:54.747Z","level":"info","msg":"Session complete","data":{"results":3,"skipped":0,"errors":0}}
+{"t":"2026-05-21T14:25:58.531Z","level":"info","msg":"Generating Excel for 3 students"}
+{"t":"2026-05-21T14:25:58.869Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-21T14-25-58.xlsx"}
+{"t":"2026-05-21T14:29:47.822Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-21T14:33:27.851Z","level":"info","msg":"Cache cleared (all)"}
+{"t":"2026-05-21T14:36:07.753Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-21T14:36:24.068Z","level":"info","msg":"Cache cleared (all)"}
+{"t":"2026-05-21T14:37:25.315Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-21T14:37:45.805Z","level":"info","msg":"Session started: 3 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-21T14:37:45.811Z","level":"info","msg":"Preparing captcha for 4SU22IS062"}
+{"t":"2026-05-21T14:37:46.795Z","level":"debug","msg":"Captcha ready for 4SU22IS062"}
+{"t":"2026-05-21T14:37:53.534Z","level":"info","msg":"Submitting captcha for 4SU22IS062"}
+{"t":"2026-05-21T14:37:53.961Z","level":"debug","msg":"Cached: 4SU22IS062 [JJEcbcs25]"}
+{"t":"2026-05-21T14:37:53.977Z","level":"info","msg":"Result: 4SU22IS062 → VIKAS BHAT D (9 subjects)"}
+{"t":"2026-05-21T14:37:53.987Z","level":"info","msg":"Preparing captcha for 4SU22IS048"}
+{"t":"2026-05-21T14:37:54.715Z","level":"debug","msg":"Captcha ready for 4SU22IS048"}
+{"t":"2026-05-21T14:37:58.853Z","level":"info","msg":"Submitting captcha for 4SU22IS048"}
+{"t":"2026-05-21T14:37:59.251Z","level":"debug","msg":"Cached: 4SU22IS048 [JJEcbcs25]"}
+{"t":"2026-05-21T14:37:59.256Z","level":"info","msg":"Result: 4SU22IS048 → SOURABH H K (9 subjects)"}
+{"t":"2026-05-21T14:37:59.258Z","level":"info","msg":"Preparing captcha for 4SU22IS044"}
+{"t":"2026-05-21T14:37:59.970Z","level":"debug","msg":"Captcha ready for 4SU22IS044"}
+{"t":"2026-05-21T14:38:03.976Z","level":"info","msg":"Submitting captcha for 4SU22IS044"}
+{"t":"2026-05-21T14:38:04.336Z","level":"debug","msg":"Cached: 4SU22IS044 [JJEcbcs25]"}
+{"t":"2026-05-21T14:38:04.341Z","level":"info","msg":"Result: 4SU22IS044 → SHREYA M N (12 subjects)"}
+{"t":"2026-05-21T14:38:04.342Z","level":"info","msg":"Session complete","data":{"results":3,"skipped":0,"errors":0}}
+{"t":"2026-05-21T14:38:07.480Z","level":"info","msg":"Generating Excel for 3 students"}
+{"t":"2026-05-21T14:38:07.807Z","level":"info","msg":"Excel saved: C:\\vikas\\BE\\Projects\\vtu-result-automation\\output\\VI_Semester_JJEcbcs25_result_2026-05-21T14-38-07.xlsx"}
+{"t":"2026-05-21T15:28:37.448Z","level":"info","msg":"Server running → http://localhost:4000"}
+{"t":"2026-05-21T15:28:47.096Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-21T15:28:58.158Z","level":"info","msg":"Session started: 2 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-21T15:28:58.162Z","level":"info","msg":"Cache hit: 4SU22IS062 — VIKAS BHAT D"}
+{"t":"2026-05-21T15:28:58.164Z","level":"info","msg":"Preparing captcha for 4SU22IS080"}
+{"t":"2026-05-21T15:28:59.215Z","level":"debug","msg":"Captcha ready for 4SU22IS080"}
+{"t":"2026-05-21T15:29:06.087Z","level":"info","msg":"Submitting captcha for 4SU22IS080"}
+{"t":"2026-05-21T15:29:06.397Z","level":"warn","msg":"Unexpected response for 4SU22IS080 — could not parse result"}
+{"t":"2026-05-21T15:29:06.399Z","level":"info","msg":"Session complete","data":{"results":1,"skipped":0,"errors":1}}
+{"t":"2026-05-21T15:29:26.062Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-21T16:10:45.007Z","level":"info","msg":"Config saved"}
+{"t":"2026-05-21T16:10:57.857Z","level":"info","msg":"Session started: 1 USNs","data":{"examPath":"JJEcbcs25"}}
+{"t":"2026-05-21T16:10:57.869Z","level":"info","msg":"Cache hit: 4SU22IS044 — SHREYA M N"}
+{"t":"2026-05-21T16:10:57.873Z","level":"info","msg":"Session complete","data":{"results":1,"skipped":0,"errors":0}}

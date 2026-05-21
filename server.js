@@ -24,11 +24,19 @@ const app    = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 // ── Directories ────────────────────────────────────────────────────────────────
-const CONFIG_PATH = path.join(__dirname, 'config.json');
-const CACHE_DIR   = path.join(__dirname, 'cache');
-const LOG_DIR     = path.join(__dirname, 'logs');
-const OUT_DIR     = path.join(__dirname, 'output');
-const PUBLIC_DIR  = path.join(__dirname, 'public');
+const CONFIG_PATH        = path.join(__dirname, 'config.json');
+const SYSTEM_CONFIG_PATH = path.join(__dirname, 'system.config.json');
+
+function readSystemConfig() {
+  try { return JSON.parse(fs.readFileSync(SYSTEM_CONFIG_PATH, 'utf8')); } catch { return {}; }
+}
+
+// ── Directories (from system config, with defaults) ────────────────────────
+const _sysDirs   = (readSystemConfig().dirs || {});
+const CACHE_DIR  = path.resolve(__dirname, _sysDirs.cache  || 'cache');
+const LOG_DIR    = path.resolve(__dirname, _sysDirs.logs   || 'logs');
+const OUT_DIR    = path.resolve(__dirname, _sysDirs.output || 'output');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 [CACHE_DIR, LOG_DIR, OUT_DIR, PUBLIC_DIR].forEach(d => {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
@@ -61,7 +69,7 @@ function writeConfig(cfg) {
 
 // ── Cache ──────────────────────────────────────────────────────────────────────
 function getCacheTtlMs() {
-  return (readConfig().cacheTtlHours || 24) * 60 * 60 * 1000;
+  return (readSystemConfig().cache?.ttlHours || 24) * 60 * 60 * 1000;
 }
 
 // Cache filename: USN_EXAMCODE.json so results from different exams don't collide
@@ -339,6 +347,59 @@ async function advanceSession() {
     skipped: session.skipped.length,
     errors : session.errors.length
   });
+}
+
+// ── Startup Cleanup ──────────────────────────────────────────────────────────
+function runCleanup() {
+  const sys     = readSystemConfig();
+  const cleanup = sys.cleanup || {};
+  const now     = Date.now();
+
+  // Delete output files older than outputMaxAgeDays (default 2)
+  const outputMaxAgeMs = (cleanup.outputMaxAgeDays ?? 2) * 24 * 60 * 60 * 1000;
+  try {
+    fs.readdirSync(OUT_DIR).forEach(f => {
+      const fp = path.join(OUT_DIR, f);
+      try {
+        if (fs.statSync(fp).isFile() && (now - fs.statSync(fp).mtimeMs) > outputMaxAgeMs) {
+          fs.unlinkSync(fp);
+          log('info', `Cleanup: removed old output file: ${f}`);
+        }
+      } catch { /* skip */ }
+    });
+  } catch { /* dir may not exist yet */ }
+
+  // Delete log files older than logsMaxAgeDays (default 3)
+  const logsMaxAgeMs = (cleanup.logsMaxAgeDays ?? 3) * 24 * 60 * 60 * 1000;
+  try {
+    fs.readdirSync(LOG_DIR).forEach(f => {
+      const fp = path.join(LOG_DIR, f);
+      try {
+        if (fs.statSync(fp).isFile() && (now - fs.statSync(fp).mtimeMs) > logsMaxAgeMs) {
+          fs.unlinkSync(fp);
+          log('info', `Cleanup: removed old log file: ${f}`);
+        }
+      } catch { /* skip */ }
+    });
+  } catch { /* dir may not exist yet */ }
+
+  // Delete expired cache entries
+  const ttlMs = getCacheTtlMs();
+  try {
+    fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.json')).forEach(f => {
+      const fp = path.join(CACHE_DIR, f);
+      try {
+        const cached = JSON.parse(fs.readFileSync(fp, 'utf8'));
+        if (Date.now() - new Date(cached.fetchedAt).getTime() >= ttlMs) {
+          fs.unlinkSync(fp);
+          log('info', `Cleanup: removed expired cache: ${f}`);
+        }
+      } catch {
+        fs.unlinkSync(fp);
+        log('warn', `Cleanup: removed corrupt cache: ${f}`);
+      }
+    });
+  } catch { /* dir may not exist yet */ }
 }
 
 // ── API Routes ─────────────────────────────────────────────────────────────────
@@ -1006,7 +1067,7 @@ app.get('/api/excel/download', (_req, res) => {
 
 // Cache
 app.get('/api/cache', (_req, res) => {
-  res.json({ ttlHours: readConfig().cacheTtlHours || 24, entries: cacheStatus() });
+  res.json({ ttlHours: readSystemConfig().cache?.ttlHours || 24, entries: cacheStatus() });
 });
 
 app.delete('/api/cache/all', (_req, res) => {
@@ -1047,8 +1108,9 @@ app.get('/api/logs/dates', (_req, res) => {
 });
 
 // ── Start ──────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || readSystemConfig().port || 4000;
 app.listen(PORT, () => {
   log('info', `Server running → http://localhost:${PORT}`);
   console.log(`\n  Open  http://localhost:${PORT}  in your browser\n`);
+  runCleanup();
 });

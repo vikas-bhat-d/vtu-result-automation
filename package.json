@@ -2,11 +2,9 @@
   "name": "vtu-result-automation",
   "version": "1.0.0",
   "description": "Automates VTU result fetching — handles CAPTCHA, token extraction, and result saving",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "server": "node server.js",
-    "generate": "node generate-excel.js"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=14"

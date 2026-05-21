@@ -1,34 +1,34 @@
 {
-  "fetchedAt": "2026-05-21T14:37:53.957Z",
+  "fetchedAt": "2026-05-21T14:37:59.248Z",
   "data": {
-    "usn": "4SU22IS062",
-    "name": "VIKAS BHAT D",
+    "usn": "4SU22IS048",
+    "name": "SOURABH H K",
     "semester": 6,
     "subjects": [
       {
         "code": "BIS601",
         "name": "FULL STACK DEVELOPMENT",
-        "internal": 47,
-        "external": 29,
-        "total": 76,
+        "internal": 46,
+        "external": 32,
+        "total": 78,
         "result": "P",
         "date": "2025-07-21"
       },
       {
         "code": "BCS602",
         "name": "MACHINE LEARNING",
-        "internal": 45,
-        "external": 40,
-        "total": 85,
+        "internal": 49,
+        "external": 41,
+        "total": 90,
         "result": "P",
         "date": "2025-07-21"
       },
       {
         "code": "BIS685",
         "name": "PROJECT PHASE I",
-        "internal": 95,
+        "internal": 93,
         "external": 0,
-        "total": 95,
+        "total": 93,
         "result": "P",
         "date": "2025-07-21"
       },
@@ -42,20 +42,20 @@
         "date": "2025-07-21"
       },
       {
-        "code": "BPEK658",
-        "name": "PHYSICAL EDUCATION",
-        "internal": 93,
+        "code": "BYOK658",
+        "name": "YOGA",
+        "internal": 88,
         "external": 0,
-        "total": 93,
+        "total": 88,
         "result": "P",
         "date": "2025-07-21"
       },
       {
         "code": "BIKS609",
         "name": "INDIAN KNOWLEDGE SYSTEM",
-        "internal": 81,
+        "internal": 72,
         "external": 0,
-        "total": 81,
+        "total": 72,
         "result": "P",
         "date": "2025-07-21"
       },
@@ -63,26 +63,26 @@
         "code": "BEC654A",
         "name": "DIGITAL SYSTEM DESIGN USING VERILOG",
         "internal": 42,
-        "external": 27,
-        "total": 69,
+        "external": 39,
+        "total": 81,
         "result": "P",
         "date": "2025-07-21"
       },
       {
         "code": "BCS613A",
         "name": "BLOCKCHAIN TECHNOLOGY",
-        "internal": 48,
-        "external": 29,
-        "total": 77,
+        "internal": 50,
+        "external": 28,
+        "total": 78,
         "result": "P",
         "date": "2025-07-21"
       },
       {
         "code": "BISL657E",
         "name": "SOFTWARE TESTING AUTOMATION",
-        "internal": 47,
+        "internal": 49,
         "external": 50,
-        "total": 97,
+        "total": 99,
         "result": "P",
         "date": "2025-07-21"
       }
