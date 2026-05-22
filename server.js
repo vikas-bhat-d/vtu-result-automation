@@ -20,12 +20,49 @@ const ExcelJS   = require('exceljs');
 const fs        = require('fs');
 const path      = require('path');
 
+// ── Runtime environment ────────────────────────────────────────────────────────
+// When packaged with pkg, process.pkg is defined. Use the exe's directory for
+// all user-editable files (configs, cache, logs, output) so they live next to
+// the executable rather than inside the read-only snapshot.
+const isPkg   = typeof process.pkg !== 'undefined';
+const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
+
+// ── CLI dispatch ──────────────────────────────────────────────────────────────
+(function () {
+  const cmd = (process.argv[2] || 'start').toLowerCase();
+  if (cmd === 'config') {
+    console.log("Please edit/view: ",path.join(baseDir, 'system.config.json'));
+    process.exit(0);
+  }
+  if (cmd !== 'start') {
+    console.error(`Unknown command: "${process.argv[2]}"`);
+    console.error('Usage: vtu-result [start|config]');
+    process.exit(1);
+  }
+})();
+
 const app    = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-// ── Directories ────────────────────────────────────────────────────────────────
-const CONFIG_PATH        = path.join(__dirname, 'config.json');
-const SYSTEM_CONFIG_PATH = path.join(__dirname, 'system.config.json');
+// ── Config paths ──────────────────────────────────────────────────────────────
+const CONFIG_PATH        = path.join(baseDir, 'config.json');
+const SYSTEM_CONFIG_PATH = path.join(baseDir, 'system.config.json');
+
+// On first run (especially as a packaged exe), create default config files
+// next to the executable so the user can edit them.
+if (!fs.existsSync(SYSTEM_CONFIG_PATH)) {
+  fs.writeFileSync(SYSTEM_CONFIG_PATH, JSON.stringify({
+    port: 4000,
+    dirs: { output: 'output', logs: 'logs', cache: 'cache' },
+    cache: { ttlHours: 22 },
+    cleanup: { outputMaxAgeDays: 2, logsMaxAgeDays: 3 }
+  }, null, 2), 'utf8');
+}
+if (!fs.existsSync(CONFIG_PATH)) {
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify({
+    examPath: '', collegeName: '', batchName: '', examName: '', semLabel: '', subjects: []
+  }, null, 2), 'utf8');
+}
 
 function readSystemConfig() {
   try { return JSON.parse(fs.readFileSync(SYSTEM_CONFIG_PATH, 'utf8')); } catch { return {}; }
@@ -33,18 +70,28 @@ function readSystemConfig() {
 
 // ── Directories (from system config, with defaults) ────────────────────────
 const _sysDirs   = (readSystemConfig().dirs || {});
-const CACHE_DIR  = path.resolve(__dirname, _sysDirs.cache  || 'cache');
-const LOG_DIR    = path.resolve(__dirname, _sysDirs.logs   || 'logs');
-const OUT_DIR    = path.resolve(__dirname, _sysDirs.output || 'output');
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const CACHE_DIR  = path.resolve(baseDir, _sysDirs.cache  || 'cache');
+const LOG_DIR    = path.resolve(baseDir, _sysDirs.logs   || 'logs');
+const OUT_DIR    = path.resolve(baseDir, _sysDirs.output || 'output');
+const PUBLIC_DIR = path.join(__dirname, 'public'); // bundled inside the exe snapshot — do NOT mkdir
 
-[CACHE_DIR, LOG_DIR, OUT_DIR, PUBLIC_DIR].forEach(d => {
+[CACHE_DIR, LOG_DIR, OUT_DIR].forEach(d => {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 });
 
 // ── Middleware ─────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
-app.use(express.static(PUBLIC_DIR));
+// express.static doesn't traverse pkg's snapshot filesystem, so serve
+// index.html directly via fs.readFileSync which pkg does patch correctly.
+app.get('/', (_req, res) => {
+  try {
+    const html = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (err) {
+    res.status(500).send('Could not load UI: ' + err.message);
+  }
+});
 
 // ── Logger ─────────────────────────────────────────────────────────────────────
 function log(level, msg, data) {
@@ -231,6 +278,8 @@ function parseResult(html) {
   const $ = cheerio.load(html);
 
   let usn = '', name = '';
+
+  // Older VTU pages used real <table> elements
   $('table tr').each((_, tr) => {
     const tds = $(tr).find('td');
     if (tds.length >= 2) {
@@ -241,13 +290,27 @@ function parseResult(html) {
     }
   });
 
+  // Newer VTU pages use div-based tables for USN/Name too
+  if (!usn || !name) {
+    $('.divTableBody .divTableRow').each((_, row) => {
+      const cells = $(row).find('.divTableCell');
+      if (cells.length >= 2) {
+        const label = $(cells.eq(0)).text().trim();
+        const value = $(cells.eq(1)).text().replace(/^[\s:]+/, '').trim();
+        if (/university\s*seat\s*number/i.test(label)) usn  = value.trim();
+        if (/student\s*name/i.test(label))              name = value.trim();
+      }
+    });
+  }
+
   const semText  = $('div b').filter((_, el) => /Semester\s*:/i.test($(el).text())).first().text();
   const semester = parseInt((semText.match(/\d+/) || [])[0]) || null;
 
   const subjects = [];
   $('.divTableBody .divTableRow').each((_, row) => {
     const cells = $(row).find('.divTableCell').map((_, td) => $(td).text().trim()).get();
-    if (!cells[0] || /subject\s*code/i.test(cells[0]) || /->/.test(cells[0])) return;
+    // Skip header rows, nav rows, and USN/Name rows (those only have 2 cells)
+    if (cells.length < 5 || !cells[0] || /subject\s*code/i.test(cells[0]) || /->/.test(cells[0])) return;
     subjects.push({
       code    : cells[0],
       name    : cells[1],
@@ -805,6 +868,9 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
 
   // Data rows
   const usnList = Object.keys(resultsMap);
+  const maxCIEs   = subjects.map(s => s.cie != null ? s.cie : 50);
+  const maxSEEs   = subjects.map(s => s.see != null ? s.see : 50);
+  const maxTots   = maxCIEs.map((c, i) => c + maxSEEs[i]);
   const isProject = subjects.map(s => {
     const codes = Array.isArray(s.code) ? s.code : String(s.code).split(',').map(c => c.trim());
     return /project|dissertation/i.test(s.name) || codes.some(c => /project|dissertation/i.test(c));
@@ -836,7 +902,13 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
         ? subjects[i].code
         : String(subjects[i].code).split(',').map(c => c.trim()).filter(Boolean);
       const subjData  = student && student.subjects ? student.subjects.find(s => cfgCodes.includes(s.code)) : null;
-      const fillUsed  = isProject[i] ? fillOrange : fillYellow;
+      const maxCIE  = maxCIEs[i];
+      const maxSEE  = maxSEEs[i];
+      const maxTot  = maxTots[i];
+      const minCIE  = maxCIE * 0.35;
+      const minSEE  = maxSEE * 0.35;
+      const normTot = `${totLetter}${r}/${maxTot}*100`;
+      const fillUsed = isProject[i] ? fillOrange : fillYellow;
 
       const cieCell = ws.getCell(r, CIE_COL(i));
       const seeCell = ws.getCell(r, SEE_COL(i));
@@ -850,28 +922,12 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
       styleCell(totCell, { fill: fillUsed, size: 11 });
 
       const grpCell = ws.getCell(r, GRP_COL(i));
-      const grpFmla = isProject[i]
-        ? `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<40,${seeLetter}${r}<35,${totLetter}${r}<80),0,IF(${totLetter}${r}>=180,10,IF(${totLetter}${r}>=160,9,IF(${totLetter}${r}>=140,8,IF(${totLetter}${r}>=120,7,IF(${totLetter}${r}>=110,6,IF(${totLetter}${r}>=100,5,IF(${totLetter}${r}>=80,4,0)))))))))` 
-        : `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<20,${seeLetter}${r}<18,${totLetter}${r}<40),0,IF(${totLetter}${r}>=90,10,IF(${totLetter}${r}>=80,9,IF(${totLetter}${r}>=70,8,IF(${totLetter}${r}>=60,7,IF(${totLetter}${r}>=55,6,IF(${totLetter}${r}>=50,5,IF(${totLetter}${r}>=40,4,0)))))))))`;
+      const grpFmla = `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<${minCIE},${seeLetter}${r}<${minSEE},${normTot}<40),0,IF(${normTot}>=90,10,IF(${normTot}>=80,9,IF(${normTot}>=70,8,IF(${normTot}>=60,7,IF(${normTot}>=55,6,IF(${normTot}>=50,5,IF(${normTot}>=40,4,0)))))))))`;
 
       const grdCell = ws.getCell(r, GRD_COL(i));
-      const grdFmla = isProject[i]
-        ? `IF(ISBLANK(${cieLetter}${r}),"",IF(OR(${cieLetter}${r}<40,${seeLetter}${r}<35,${totLetter}${r}<80),"F",IF(${totLetter}${r}>=180,"O",IF(${totLetter}${r}>=160,"A+",IF(${totLetter}${r}>=140,"A",IF(${totLetter}${r}>=120,"B+",IF(${totLetter}${r}>=110,"B",IF(${totLetter}${r}>=100,"C","P"))))))))))` 
-        : `IF(ISBLANK(${cieLetter}${r}),"",IF(${cieLetter}${r}<20,"NE",IF(OR(${seeLetter}${r}<18,${totLetter}${r}<40),"F",IF(${totLetter}${r}>=90,"O",IF(${totLetter}${r}>=80,"A+",IF(${totLetter}${r}>=70,"A",IF(${totLetter}${r}>=60,"B+",IF(${totLetter}${r}>=55,"B",IF(${totLetter}${r}>=50,"C",IF(${totLetter}${r}>=40,"P","F"))))))))))`;
-      // If VTU explicitly reports this subject as passed, use static computed values
-      // (ignores SEE minimum — handles subjects with no external exam, e.g. NSS, Project)
-      const vtuPass = subjData && /^P$/i.test(String(subjData.result ?? '').trim());
-      if (vtuPass) {
-        const tot = typeof subjData.total === 'number' && !isNaN(subjData.total)
-          ? subjData.total
-          : (typeof subjData.internal === 'number' ? subjData.internal : 0);
-        const gp = gradePointFromTotal(tot, isProject[i]);
-        grpCell.value = gp;
-        grdCell.value = gradeFromPoint(gp);
-      } else {
-        grpCell.value = { formula: grpFmla };
-        grdCell.value = { formula: grdFmla };
-      }
+      const grdFmla = `IF(ISBLANK(${cieLetter}${r}),"",IF(${cieLetter}${r}<${minCIE},"NE",IF(OR(${seeLetter}${r}<${minSEE},${normTot}<40),"F",IF(${normTot}>=90,"O",IF(${normTot}>=80,"A+",IF(${normTot}>=70,"A",IF(${normTot}>=60,"B+",IF(${normTot}>=55,"B",IF(${normTot}>=50,"C",IF(${normTot}>=40,"P","F"))))))))))`;
+      grpCell.value = { formula: grpFmla };
+      grdCell.value = { formula: grdFmla };
       styleCell(grpCell, { fill: fillUsed, halign: 'center',valign:"middle", size: 11 });
       styleCell(grdCell, { fill: fillUsed, halign: 'center',valign:"middle", size: 11 });
     }
@@ -960,10 +1016,10 @@ async function generateExcel(resultsMap, subjects, credits, collegeName, batchNa
     const tL = colL(TOT_COL(i)), gpL = colL(GRP_COL(i)), grL = colL(GRD_COL(i));
     const dr = col => `${col}${D_START}:${col}${D_END}`;
 
-    sCell(ROW_AVG, CIE_COL(i), `=TEXT(IFERROR(AVERAGE(${dr(cL)})*100/50,""),"0.0")`);
-    sCell(ROW_AVG, SEE_COL(i), `=TEXT(IFERROR(AVERAGE(${dr(sL)})*100/50,""),"0.0")`);
+    sCell(ROW_AVG, CIE_COL(i), `=TEXT(IFERROR(AVERAGE(${dr(cL)})*100/${maxCIEs[i]},""),"0.0")`);
+    sCell(ROW_AVG, SEE_COL(i), maxSEEs[i] > 0 ? `=TEXT(IFERROR(AVERAGE(${dr(sL)})*100/${maxSEEs[i]},""),"0.0")` : '');
     ws.mergeCells(ROW_AVG, TOT_COL(i), ROW_AVG, GRD_COL(i));
-    sCell(ROW_AVG, TOT_COL(i), `=TEXT(IFERROR(AVERAGE(${dr(tL)}),""),"0.0")`);
+    sCell(ROW_AVG, TOT_COL(i), `=TEXT(IFERROR(AVERAGE(${dr(tL)})*100/${maxTots[i]},""),"0.0")`);
 
     sCell(ROW_NSTU, GRP_COL(i), `=COUNTA($B$${D_START}:$B$${D_END})`);
     sCell(ROW_NE,   GRP_COL(i), `=COUNTIF(${dr(grL)},"NE")`);

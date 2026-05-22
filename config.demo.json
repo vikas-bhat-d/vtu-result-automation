@@ -1,0 +1,26 @@
+{
+  "examPath": "MJ26cbcs",
+  "collegeName": "SDM Institute of Technology, Ujire",
+  "batchName": "FOURTH YEAR B.E. IS (2025-2026)",
+  "examName": "MAY/JUNE-2026 Examination Results",
+  "semLabel": "VIII Semester",
+  "subjects": [
+    {
+      "code": "BIS801",
+      "name": "PROFESSIONAL ELECTIVE COURSE",
+      "credit": 3
+    },
+    {
+      "code": "BIS802",
+      "name": "OPEN ELECTIVE COURSE",
+      "credit": 3
+    },
+    {
+      "code": "BINT803B",
+      "name": "INDUSTRY INTERNSHIP",
+      "credit": 10,
+      "cie": 100,
+      "see": 100
+    }
+  ]
+}

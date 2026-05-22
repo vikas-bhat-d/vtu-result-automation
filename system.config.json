@@ -9,7 +9,7 @@
     "ttlHours": 22
   },
   "cleanup": {
-    "outputMaxAgeDays": 2,
+    "outputMaxAgeDays": 1,
     "logsMaxAgeDays": 3
   }
 }

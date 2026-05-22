@@ -669,11 +669,6 @@ textarea {
             <input type="text" name="examPath" class="mono" placeholder="D25J26Ecbcs" required>
             <span class="hint">Path segment from the VTU results URL</span>
           </div>
-          <div class="field">
-            <label>Cache TTL (hours)</label>
-            <input type="number" name="cacheTtlHours" value="24" min="1" max="168">
-            <span class="hint">How long to keep cached results</span>
-          </div>
           <div class="field span-2">
             <label>College Name</label>
             <input type="text" name="collegeName" placeholder="SDM Institute of Technology, Ujire">
@@ -703,6 +698,8 @@ textarea {
                 <th>Code</th>
                 <th>Name</th>
                 <th>Credits</th>
+                <th title="Max CIE marks (default 50)">CIE Max</th>
+                <th title="Max SEE marks (default 50)">SEE Max</th>
                 <th></th>
               </tr>
             </thead>
@@ -986,7 +983,7 @@ async function loadConfig() {
 
 function populateConfigForm(cfg) {
   const form = $('config-form');
-  ['examPath','cacheTtlHours','collegeName','batchName','examName','semLabel'].forEach(k => {
+  ['examPath','collegeName','batchName','examName','semLabel'].forEach(k => {
     const el = form.elements[k];
     if (el && cfg[k] != null) el.value = cfg[k];
   });
@@ -1003,6 +1000,8 @@ function addSubjectRow(s = {}) {
     <td><input type="text" class="mono" name="subj-code" placeholder="BIS701" value="${s.code||''}" style="width:100px"></td>
     <td><input type="text" name="subj-name" placeholder="Big Data Analytics" value="${s.name||''}" style="width:240px"></td>
     <td><input type="number" name="subj-credit" placeholder="4" value="${s.credit||''}" style="width:60px" min="1" max="10"></td>
+    <td><input type="number" name="subj-cie" placeholder="50" value="${s.cie!=null?s.cie:''}" style="width:55px" min="1"></td>
+    <td><input type="number" name="subj-see" placeholder="50" value="${s.see!=null?s.see:''}" style="width:55px" min="0"></td>
     <td><button type="button" class="del-btn" title="Remove">×</button></td>`;
   tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
   $('subjects-body').appendChild(tr);
@@ -1031,12 +1030,16 @@ $('config-form').addEventListener('submit', async e => {
     const code   = tr.querySelector('[name=subj-code]').value.trim();
     const name   = tr.querySelector('[name=subj-name]').value.trim();
     const credit = +tr.querySelector('[name=subj-credit]').value || 0;
-    if (code && name) subjects.push({ code, name, credit });
+    const cieVal = tr.querySelector('[name=subj-cie]').value.trim();
+    const seeVal = tr.querySelector('[name=subj-see]').value.trim();
+    const subj = { code, name, credit };
+    if (cieVal !== '') subj.cie = +cieVal;
+    if (seeVal !== '') subj.see = +seeVal;
+    if (code && name) subjects.push(subj);
   });
 
   const cfg = {
     examPath     : form.elements.examPath.value.trim(),
-    cacheTtlHours: +form.elements.cacheTtlHours.value || 24,
     collegeName  : form.elements.collegeName.value.trim(),
     batchName    : form.elements.batchName.value.trim(),
     examName     : form.elements.examName.value.trim(),
@@ -1097,8 +1100,8 @@ function updateUSNPreview(usns) {
 
 // CSV upload
 const csvDrop = $('csv-drop-zone');
-$('csv-file-upload').addEventListener('change', async e => {
-  const file = e.target.files[0];
+
+async function uploadCSVFile(file) {
   if (!file) return;
   const fd = new FormData();
   fd.append('file', file);
@@ -1109,6 +1112,10 @@ $('csv-file-upload').addEventListener('change', async e => {
     updateUSNPreview(data.usns);
     toast(`${data.usns.length} USNs loaded from CSV`, 'success');
   } catch (err) { toast(err.message, 'error'); }
+}
+
+$('csv-file-upload').addEventListener('change', async e => {
+  await uploadCSVFile(e.target.files[0]);
   e.target.value = '';
 });
 
@@ -1119,10 +1126,7 @@ $('csv-file-upload').addEventListener('change', async e => {
     else if (ev === 'dragleave') csvDrop.classList.remove('drag-over');
     else {
       csvDrop.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file) $('csv-file-upload').dispatchEvent(Object.assign(new Event('change'), {
-        target: Object.assign($('csv-file-upload'), { files: e.dataTransfer.files })
-      }));
+      uploadCSVFile(e.dataTransfer.files[0]);
     }
   });
 });

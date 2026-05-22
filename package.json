@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "Automates VTU result fetching — handles CAPTCHA, token extraction, and result saving",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "pkg . --targets node20-win-x64 --output dist/vtu-result.exe"
   },
   "engines": {
     "node": ">=14"
@@ -15,11 +17,23 @@
     "automation"
   ],
   "license": "MIT",
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ],
+    "targets": [
+      "node20-win-x64"
+    ],
+    "outputPath": "dist"
+  },
   "dependencies": {
     "axios": "^1.16.1",
     "cheerio": "^1.2.0",
     "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "multer": "^2.1.1"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.19.0"
   }
 }

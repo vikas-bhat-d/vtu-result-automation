@@ -4,3 +4,5 @@ output
 node_modules
 logs
 cache
+dist
+usns.csv
