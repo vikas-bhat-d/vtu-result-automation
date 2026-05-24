@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  width="512"
+  height="512">
+  
+  <!-- Green circle (accent primary color) - fills most of canvas -->
+  <!-- Center: 256,256 | Radius: 240px (fills ~94% of viewBox) -->
+  <circle cx="256" cy="256" r="240" fill="#7FA688" />
+  
+  <!-- White diamond (rotated square) inside the green circle -->
+  <!-- Diamond points at 140px from center -->
+  <path
+    d="M 256 116 L 396 256 L 256 396 L 116 256 Z"
+    fill="#F5F0E8"
+    stroke="none" />
+  
+</svg>
