@@ -999,8 +999,8 @@ function addSubjectRow(s = {}) {
   tr.innerHTML = `
     <td><input type="text" class="mono" name="subj-code" placeholder="BIS701" value="${s.code||''}" style="width:100px"></td>
     <td><input type="text" name="subj-name" placeholder="Big Data Analytics" value="${s.name||''}" style="width:240px"></td>
-    <td><input type="number" name="subj-credit" placeholder="4" value="${s.credit||''}" style="width:60px" min="1" max="10"></td>
-    <td><input type="number" name="subj-cie" placeholder="50" value="${s.cie!=null?s.cie:''}" style="width:55px" min="1"></td>
+    <td><input type="number" name="subj-credit" placeholder="4" value="${s.credit||''}" style="width:60px" min="0"></td>
+    <td><input type="number" name="subj-cie" placeholder="50" value="${s.cie!=null?s.cie:''}" style="width:55px" min="0"></td>
     <td><input type="number" name="subj-see" placeholder="50" value="${s.see!=null?s.see:''}" style="width:55px" min="0"></td>
     <td><button type="button" class="del-btn" title="Remove">×</button></td>`;
   tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
