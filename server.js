@@ -257,10 +257,12 @@ async function fetchCaptchaBase64(client) {
   return `data:image/png;base64,${Buffer.from(imgBuf).toString('base64')}`;
 }
 
-async function submitCaptcha(client, examPath, usn, token, captchaCode) {
+async function submitCaptcha(client, examPath, usn, token,js_token, captchaCode) {
   const { data: html } = await client.post(
     `/${examPath}/resultpage.php`,
-    new URLSearchParams({ Token: token, lns: usn, captchacode: captchaCode }).toString(),
+    
+
+    new URLSearchParams({ js_token:js_token, Token: token, lns: usn, captchacode: captchaCode }).toString(),
     {
       headers: {
         'Content-Type'  : 'application/x-www-form-urlencoded',
@@ -599,11 +601,11 @@ app.post('/api/captcha/submit', async (req, res) => {
 
   const { usn, token, client } = session.pending;
   const examPath = session.examPath;
-
+  const js_token= Buffer.from('student_access_' + new Date().getFullYear(), 'utf8').toString('base64') //used for bot detection
   log('info', `Submitting captcha for ${usn}`);
 
   try {
-    const html = await withRetry(() => submitCaptcha(client, examPath, usn, token, captchaCode.trim()));
+    const html = await withRetry(() => submitCaptcha(client, examPath, usn, token, js_token, captchaCode.trim()));
 
     // Always save raw HTML for debugging
     const ts      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
